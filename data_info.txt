@@ -1,0 +1,108 @@
+Shape: (28748, 24)
+
+Dtypes:
+date                     datetime64[us]
+branch_id                           str
+branch_name                         str
+branch_city                         str
+branch_province                     str
+branch_type                         str
+open_year                         int64
+total_transactions                int64
+total_revenue                     int64
+avg_ticket_size                   int64
+total_cups_sold                   int64
+top_selling_category                str
+dine_in_percent                 float64
+delivery_percent                float64
+takeaway_percent                float64
+employee_on_duty                  int64
+operating_cost                    int64
+promo_active                       bool
+promo_type                          str
+weather                             str
+is_weekend                         bool
+customer_satisfaction           float64
+total_distribusi                float64
+branch_region                       str
+
+Unique branches:
+  KopiSeru Renon
+  KopiSeru Undip
+  KopiSeru Sudirman
+  KopiSeru Darmo
+  KopiSeru UGM
+  KopiSeru Dago
+  KopiSeru Tunjungan
+  KopiSeru Kuningan
+  KopiSeru Simpang Lima
+  KopiSeru Paris Van Java
+  KopiSeru ITS
+  KopiSeru ITB
+  KopiSeru Grand Indonesia
+  KopiSeru UI Depok
+  KopiSeru Ambarukmo
+  KopiSeru Malioboro
+  KopiSeru Braga
+  KopiSeru Kemang
+  KopiSeru Thamrin
+  KopiSeru PIK
+  KopiSeru Sun Plaza
+  KopiSeru Kelapa Gading
+  KopiSeru Pondok Indah
+  KopiSeru Panakkukang
+  KopiSeru Pasteur
+  KopiSeru Beachwalk
+  KopiSeru Senayan
+  KopiSeru Asia Mega Mas
+  KopiSeru Pakuwon
+  KopiSeru Malang Town Sq
+  KopiSeru UB
+  KopiSeru Seturan
+  KopiSeru Losari
+  KopiSeru USU
+  KopiSeru Binus Anggrek
+  KopiSeru HR Muhammad
+  KopiSeru Cihampelas
+  KopiSeru Paragon
+  KopiSeru Udayana
+  KopiSeru Pantai Indah
+
+Years: [np.int32(2021), np.int32(2022), np.int32(2023)]
+
+Sample row:
+  date: 2021-09-20 00:00:00
+  branch_id: KS-031
+  branch_name: KopiSeru Renon
+  branch_city: Denpasar
+  branch_province: Bali
+  branch_type: Standalone
+  open_year: 2021
+  total_transactions: 85
+  total_revenue: 1615000
+  avg_ticket_size: 19000
+  total_cups_sold: 110
+  top_selling_category: Non-Coffee
+  dine_in_percent: 36.0
+  delivery_percent: 20.0
+  takeaway_percent: 44.0
+  employee_on_duty: 4
+  operating_cost: 2058000
+  promo_active: False
+  promo_type: nan
+  weather: Cerah
+  is_weekend: False
+  customer_satisfaction: 4.0
+  total_distribusi: 100.0
+  branch_region: Indonesia
+
+Revenue sum: 122,836,183,000
+Cups sold sum: 5,615,291
+Transactions sum: 4,532,875
+Avg ticket size mean: 25,935
+Satisfaction mean: 3.84
+Satisfaction range: 2.5 - 5.0
+
+Unique categories: ['Non-Coffee', 'Espresso Based', 'Kopi Susu', 'Tea', 'Snack & Pastry']
+Unique branch_type: ['Standalone', 'University', 'Office Area', 'Mall']
+Unique promo_type: [nan, 'Cashback E-Wallet', 'Bundling Snack', 'Happy Hour', 'Diskon 20%', 'Buy 1 Get 1']

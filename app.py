@@ -1,849 +1,1029 @@
+import os
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
-import plotly.express as px
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 import streamlit as st
+from plotly.subplots import make_subplots
 
-
+# ============================================================
+# 1. PAGE CONFIG
+# ============================================================
 st.set_page_config(
     page_title="KopiSeru Marketing Dashboard",
-    page_icon="coffee",
+    page_icon="☕",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
 
-DATA_PATH = Path(__file__).resolve().parent / "coffee_shop_data_cleaned_final (7).xlsx"
+# ============================================================
+# 2. DESIGN TOKENS
+#    Dominant palette: brown + cream. Green/red only for deltas.
+# ============================================================
+BROWN_900 = "#3E2723"
+BROWN_800 = "#4A2C22"
+BROWN_700 = "#5D4037"
+BROWN_600 = "#6D4C41"
+BROWN_500 = "#8D6E63"
+BROWN_400 = "#A1887F"
+BROWN_300 = "#BCAAA4"
+BROWN_200 = "#D7CCC8"
+BROWN_100 = "#EFEBE9"
+CREAM_BG = "#F8F4EF"
+CARD_WHITE = "#FFFFFF"
+BORDER = "#E9E1D9"
+GRID = "#F2ECE6"
+GREEN = "#2E7D32"
+GREEN_BG = "#E8F5E9"
+RED = "#C62828"
+RED_BG = "#FFEBEE"
 
-BRAND = "#13B981"
-BROWN = "#7A5136"
-BLUE = "#2F80ED"
-ORANGE = "#F97316"
-RED = "#C2412D"
-DARK = "#111827"
-MUTED = "#6B7280"
-CARD = "#EAF2FF"
-GRID = "#DDE7F5"
-PALETTE = ["#13B981", "#2F80ED", "#F97316", "#7A5136", "#8B5CF6"]
+# ============================================================
+# 3. GLOBAL CSS
+#    Goal: one-screen dashboard, no vertical scroll, white cards.
+# ============================================================
+st.markdown(
+    f"""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+:root {{
+    --bg: {CREAM_BG};
+    --card: {CARD_WHITE};
+    --brown-900: {BROWN_900};
+    --brown-700: {BROWN_700};
+    --brown-500: {BROWN_500};
+    --border: {BORDER};
+    --green: {GREEN};
+    --green-bg: {GREEN_BG};
+    --red: {RED};
+    --red-bg: {RED_BG};
+}}
+
+/* ---------- Hide Streamlit chrome ---------- */
+#MainMenu, footer, header {{ visibility: hidden !important; }}
+[data-testid="stSidebar"],
+[data-testid="collapsedControl"] {{ display: none !important; }}
+
+/* ---------- Hard no-scroll viewport ---------- */
+html, body {{
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    background: var(--bg) !important;
+}}
+
+[data-testid="stApp"],
+[data-testid="stAppViewContainer"],
+.main {{
+    width: 100vw !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
+    background: var(--bg) !important;
+    font-family: 'Inter', sans-serif !important;
+}}
+
+[data-testid="stAppViewContainer"] > .main {{
+    overflow: hidden !important;
+}}
+
+.block-container {{
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    padding: 0.55rem 1.0rem 0.40rem 1.0rem !important;
+    overflow: hidden !important;
+}}
+
+/* Streamlit layout spacing */
+[data-testid="stVerticalBlock"] {{
+    gap: 0.42rem !important;
+}}
+
+div[data-testid="stHorizontalBlock"] {{
+    gap: 0.62rem !important;
+    align-items: stretch !important;
+}}
+
+/* ---------- Header ---------- */
+.dashboard-head {{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 48px;
+    padding: 0.05rem 0;
+}}
+
+.dashboard-title {{
+    color: var(--brown-900);
+    font-size: 1.32rem;
+    line-height: 1.10;
+    font-weight: 800;
+    letter-spacing: -0.45px;
+    white-space: nowrap;
+}}
+
+.dashboard-subtitle {{
+    color: var(--brown-500);
+    font-size: 0.64rem;
+    line-height: 1.10;
+    font-weight: 400;
+    margin-top: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}}
+
+/* ---------- Selectboxes / filter cards ---------- */
+div[data-testid="stSelectbox"] {{
+    margin: 0 !important;
+}}
+
+div[data-testid="stSelectbox"] label {{
+    margin: 0 0 2px 0 !important;
+    padding: 0 !important;
+}}
+
+div[data-testid="stSelectbox"] label p {{
+    color: var(--brown-500) !important;
+    font-size: 0.54rem !important;
+    line-height: 1 !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.30px !important;
+    text-transform: uppercase !important;
+    white-space: nowrap !important;
+}}
+
+div[data-baseweb="select"] > div {{
+    min-height: 32px !important;
+    height: 32px !important;
+    background: #FFFFFF !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 9px !important;
+    box-shadow: 0 1px 3px rgba(62,39,35,0.035) !important;
+    padding-left: 0.08rem !important;
+    overflow: hidden !important;
+}}
+
+div[data-baseweb="select"] span,
+div[data-baseweb="select"] input,
+div[data-baseweb="select"] div {{
+    font-family: 'Inter', sans-serif !important;
+}}
+
+div[data-baseweb="select"] span {{
+    color: var(--brown-900) !important;
+    font-size: 0.66rem !important;
+    line-height: 1.05 !important;
+    font-weight: 500 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}}
+
+ul[role="listbox"] {{
+    font-size: 0.68rem !important;
+}}
+
+/* ---------- KPI cards ---------- */
+.kpi-card {{
+    height: 78px;
+    min-height: 78px;
+    box-sizing: border-box;
+    background: #FFFFFF !important;
+    opacity: 1 !important;
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    box-shadow: 0 2px 8px rgba(62,39,35,0.045);
+    padding: 0.56rem 0.70rem;
+    display: flex;
+    align-items: center;
+    gap: 0.62rem;
+    overflow: hidden;
+}}
+
+.kpi-icon-wrap {{
+    flex: 0 0 42px;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--brown-700);
+    background: #F5EADF;
+    font-size: 1.10rem;
+}}
+
+.kpi-content {{
+    flex: 1 1 auto;
+    min-width: 0;
+}}
+
+.kpi-label {{
+    color: var(--brown-500);
+    font-size: 0.57rem;
+    line-height: 1.05;
+    font-weight: 700;
+    letter-spacing: 0.30px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}}
+
+.kpi-main-row {{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.35rem;
+    margin-top: 4px;
+}}
+
+.kpi-value {{
+    color: var(--brown-900);
+    font-size: 1.10rem;
+    line-height: 1.05;
+    font-weight: 800;
+    letter-spacing: -0.25px;
+    white-space: nowrap;
+}}
+
+.kpi-delta-up,
+.kpi-delta-down {{
+    flex: 0 0 auto;
+    font-size: 0.56rem;
+    line-height: 1;
+    font-weight: 700;
+    padding: 4px 6px;
+    border-radius: 6px;
+    white-space: nowrap;
+}}
+
+.kpi-delta-up {{
+    color: var(--green);
+    background: var(--green-bg);
+}}
+
+.kpi-delta-down {{
+    color: var(--red);
+    background: var(--red-bg);
+}}
+
+.kpi-delta-neutral {{
+    flex: 0 0 auto;
+    color: var(--brown-500);
+    background: #F5F1ED;
+    font-size: 0.54rem;
+    line-height: 1;
+    font-weight: 600;
+    padding: 4px 6px;
+    border-radius: 6px;
+    white-space: nowrap;
+}}
+
+.kpi-caption {{
+    color: #A1887F;
+    font-size: 0.51rem;
+    line-height: 1;
+    margin-top: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}}
+
+/* ---------- Solid white chart cards ---------- */
+div[data-testid="stVerticalBlockBorderWrapper"] {{
+    background: #FFFFFF !important;
+    background-color: #FFFFFF !important;
+    opacity: 1 !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 11px !important;
+    box-shadow: 0 2px 8px rgba(62,39,35,0.045) !important;
+    padding: 0.46rem 0.62rem 0.22rem 0.62rem !important;
+    overflow: hidden !important;
+}}
+
+div[data-testid="stVerticalBlockBorderWrapper"] > div,
+div[data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlock"] {{
+    background: #FFFFFF !important;
+    background-color: #FFFFFF !important;
+}}
+
+.chart-title {{
+    color: var(--brown-900);
+    font-size: 0.74rem;
+    line-height: 1.10;
+    font-weight: 750;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}}
+
+.chart-subtitle {{
+    color: #A1887F;
+    font-size: 0.54rem;
+    line-height: 1.10;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}}
+
+.stPlotlyChart,
+.stPlotlyChart > div {{
+    background: #FFFFFF !important;
+    border-radius: 7px;
+    overflow: hidden;
+}}
+
+/* Prevent accidental extra spacing from empty paragraphs */
+p:empty {{ display: none !important; }}
+
+/* ---------- Responsive compression for short laptop screens ---------- */
+@media (max-height: 850px) {{
+    .block-container {{
+        padding-top: 0.35rem !important;
+        padding-bottom: 0.28rem !important;
+    }}
+    [data-testid="stVerticalBlock"] {{ gap: 0.30rem !important; }}
+    div[data-testid="stHorizontalBlock"] {{ gap: 0.50rem !important; }}
+    .dashboard-head {{ min-height: 42px; }}
+    .dashboard-title {{ font-size: 1.16rem; }}
+    .dashboard-subtitle {{ font-size: 0.57rem; }}
+    .kpi-card {{ height: 68px; min-height: 68px; padding: 0.42rem 0.58rem; }}
+    .kpi-icon-wrap {{ width: 36px; height: 36px; flex-basis: 36px; font-size: 0.95rem; }}
+    .kpi-value {{ font-size: 0.98rem; }}
+    .kpi-label {{ font-size: 0.52rem; }}
+    .chart-title {{ font-size: 0.68rem; }}
+    .chart-subtitle {{ font-size: 0.50rem; }}
+}}
+
+@media (max-height: 720px) {{
+    .dashboard-subtitle {{ display: none; }}
+    .dashboard-head {{ min-height: 34px; }}
+    .kpi-card {{ height: 60px; min-height: 60px; }}
+    .kpi-caption {{ display: none; }}
+}}
+</style>
+""",
+    unsafe_allow_html=True,
+)
+
+# ============================================================
+# 4. DATA LOADING
+# ============================================================
+DEFAULT_DATA_PATHS = [
+    "coffee_shop_data_cleaned_final (7) (1).xlsx",
+    "coffe_shop_final.xlsx",
+    "coffee_shop_final.xlsx",
+]
+
+
+def resolve_excel_path() -> Path:
+    """Resolve the Excel source without hard-failing on one filename."""
+    env_path = os.getenv("KOPISERU_DATA_PATH")
+    candidates = []
+    if env_path:
+        candidates.append(Path(env_path))
+    candidates.extend(Path(p) for p in DEFAULT_DATA_PATHS)
+
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+
+    # Last fallback: first xlsx in current folder
+    xlsx_files = sorted(Path(".").glob("*.xlsx"))
+    if xlsx_files:
+        return xlsx_files[0]
+
+    raise FileNotFoundError(
+        "File Excel tidak ditemukan. Letakkan dataset .xlsx di folder yang sama "
+        "dengan app.py atau set environment variable KOPISERU_DATA_PATH."
+    )
 
 
 @st.cache_data(show_spinner=False)
-def load_data(path: Path) -> pd.DataFrame:
-    df = pd.read_excel(path, sheet_name="coffee_shop_data_cleaned_final ")
-    df["date"] = pd.to_datetime(df["date"], errors="coerce")
-    df = df.dropna(subset=["date"]).copy()
-    df["month"] = df["date"].dt.to_period("M").dt.to_timestamp()
-    df["year"] = df["date"].dt.year
-    df["promo_flag"] = df["promo_active"].map({True: "Promo aktif", False: "Tanpa promo"})
-    df["promo_type"] = df["promo_type"].fillna("Tanpa promo")
-    df["gross_profit"] = df["total_revenue"] - df["operating_cost"]
-    return df
+def load_data(path_str: str) -> pd.DataFrame:
+    data = pd.read_excel(path_str)
+
+    required_cols = {
+        "date",
+        "branch_name",
+        "branch_city",
+        "branch_type",
+        "total_transactions",
+        "total_revenue",
+        "avg_ticket_size",
+        "total_cups_sold",
+        "top_selling_category",
+        "dine_in_percent",
+        "delivery_percent",
+        "takeaway_percent",
+        "promo_active",
+        "promo_type",
+        "is_weekend",
+    }
+    missing = sorted(required_cols - set(data.columns))
+    if missing:
+        raise ValueError(f"Kolom dataset belum lengkap: {', '.join(missing)}")
+
+    data = data.copy()
+    data["date"] = pd.to_datetime(data["date"], errors="coerce")
+    data = data.dropna(subset=["date"])
+
+    # Standardized helper dimensions
+    data["year"] = data["date"].dt.year.astype(int)
+    data["month_period"] = data["date"].dt.to_period("M")
+    data["month_label"] = data["date"].dt.strftime("%b %Y")
+    data["promo_active"] = data["promo_active"].fillna(False).astype(bool)
+    data["promo_status"] = np.where(data["promo_active"], "Promo", "Non Promo")
+    data["day_type"] = np.where(data["is_weekend"].fillna(False).astype(bool), "Weekend", "Weekday")
+    data["promo_type"] = data["promo_type"].fillna("No Promo")
+
+    # Numeric safety
+    numeric_cols = [
+        "total_transactions",
+        "total_revenue",
+        "avg_ticket_size",
+        "total_cups_sold",
+        "dine_in_percent",
+        "delivery_percent",
+        "takeaway_percent",
+    ]
+    for col in numeric_cols:
+        data[col] = pd.to_numeric(data[col], errors="coerce").fillna(0)
+
+    return data
 
 
-def rupiah(value: float) -> str:
-    if abs(value) >= 1_000_000_000:
-        return f"Rp {value / 1_000_000_000:.1f} M"
-    if abs(value) >= 1_000_000:
-        return f"Rp {value / 1_000_000:.1f} jt"
-    return f"Rp {value:,.0f}"
+try:
+    EXCEL_PATH = resolve_excel_path()
+    df = load_data(str(EXCEL_PATH))
+except Exception as exc:
+    st.error(f"Gagal memuat dataset: {exc}")
+    st.stop()
+
+# ============================================================
+# 5. FORMAT & ANALYTIC HELPERS
+# ============================================================
+def format_rupiah(value: float) -> str:
+    value = float(value or 0)
+    abs_v = abs(value)
+    sign = "-" if value < 0 else ""
+    if abs_v >= 1_000_000_000_000:
+        return f"{sign}Rp {abs_v / 1_000_000_000_000:.1f} T"
+    if abs_v >= 1_000_000_000:
+        return f"{sign}Rp {abs_v / 1_000_000_000:.1f} B"
+    if abs_v >= 1_000_000:
+        return f"{sign}Rp {abs_v / 1_000_000:.1f} M"
+    if abs_v >= 1_000:
+        return f"{sign}Rp {abs_v / 1_000:.1f} K"
+    return f"{sign}Rp {abs_v:,.0f}"
 
 
-def number(value: float) -> str:
-    if abs(value) >= 1_000_000:
-        return f"{value / 1_000_000:.1f} jt"
-    if abs(value) >= 1_000:
-        return f"{value / 1_000:.1f} rb"
-    return f"{value:,.0f}"
+def format_number(value: float) -> str:
+    value = float(value or 0)
+    abs_v = abs(value)
+    sign = "-" if value < 0 else ""
+    if abs_v >= 1_000_000_000:
+        return f"{sign}{abs_v / 1_000_000_000:.1f} B"
+    if abs_v >= 1_000_000:
+        return f"{sign}{abs_v / 1_000_000:.2f} M"
+    if abs_v >= 1_000:
+        return f"{sign}{abs_v / 1_000:.1f} K"
+    return f"{sign}{abs_v:,.0f}"
 
 
-def pct(value: float) -> str:
-    return f"{value * 100:.1f}%"
+def calc_delta(current: float, previous: float | None) -> float | None:
+    if previous is None or pd.isna(previous) or previous == 0:
+        return None
+    return ((current - previous) / previous) * 100
 
 
-def growth(current: float, previous: float) -> tuple[str, str]:
-    if previous == 0:
-        return "0.0%", "#6B7280"
-    value = (current - previous) / previous
-    color = BRAND if value >= 0 else RED
-    sign = "+" if value >= 0 else "-"
-    return f"{sign}{abs(value) * 100:.1f}%", color
-
-
-def growth_tuple(current: float, previous: float) -> tuple[float, str, str]:
-    value = growth_value(current, previous)
-    color = BRAND if value >= 0 else RED
-    arrow = "▲" if value >= 0 else "▼"
-    return value, f"{arrow} {abs(value) * 100:.1f}%", color
-
-
-def growth_value(current: float, previous: float) -> float:
-    if previous == 0:
+def weighted_ticket(data: pd.DataFrame) -> float:
+    transactions = data["total_transactions"].sum()
+    if transactions == 0:
         return 0.0
-    return (current - previous) / previous
+    return data["total_revenue"].sum() / transactions
 
 
-def sparkline_svg(values: pd.Series, color: str) -> str:
-    series = pd.Series(values).fillna(0).tail(12)
-    if series.empty:
-        series = pd.Series([0, 0])
-    if len(series) == 1:
-        series = pd.concat([series, series], ignore_index=True)
-    min_value = series.min()
-    max_value = series.max()
-    span = max(max_value - min_value, 1)
-    width = 220
-    height = 34
-    step = width / (len(series) - 1)
-    points = []
-    for index, value in enumerate(series):
-        x = index * step
-        y = height - ((value - min_value) / span * (height - 8)) - 4
-        points.append(f"{x:.1f},{y:.1f}")
+def html_kpi(icon: str, label: str, value: str, delta: float | None, caption: str) -> str:
+    if delta is None:
+        delta_html = '<span class="kpi-delta-neutral">—</span>'
+    elif delta >= 0:
+        delta_html = f'<span class="kpi-delta-up">▲ {delta:.1f}%</span>'
+    else:
+        delta_html = f'<span class="kpi-delta-down">▼ {abs(delta):.1f}%</span>'
+
     return f"""
-    <svg class="sparkline" viewBox="0 0 {width} {height}" preserveAspectRatio="none">
-        <polyline points="{' '.join(points)}" fill="none" stroke="{color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
-    </svg>
+    <div class="kpi-card">
+        <div class="kpi-icon-wrap">{icon}</div>
+        <div class="kpi-content">
+            <div class="kpi-label">{label}</div>
+            <div class="kpi-main-row">
+                <div class="kpi-value">{value}</div>
+                {delta_html}
+            </div>
+            <div class="kpi-caption">{caption}</div>
+        </div>
+    </div>
     """
 
 
-def apply_style() -> None:
+def solid_plot_layout(fig: go.Figure, height: int) -> go.Figure:
+    """Apply consistent white-card Plotly styling."""
+    fig.update_layout(
+        height=height,
+        margin=dict(l=8, r=8, t=8, b=8),
+        paper_bgcolor=CARD_WHITE,
+        plot_bgcolor=CARD_WHITE,
+        font=dict(family="Inter", size=9, color=BROWN_700),
+        hoverlabel=dict(
+            bgcolor=CARD_WHITE,
+            bordercolor=BORDER,
+            font=dict(family="Inter", size=10, color=BROWN_900),
+        ),
+    )
+    return fig
+
+
+# ============================================================
+# 6. HEADER + FILTERS
+#    No search bar. Compact labels to avoid clipping.
+# ============================================================
+header_col, fy_col, branch_col, city_col, type_col, promo_col = st.columns(
+    [4.2, 1.15, 1.45, 1.25, 1.40, 1.45]
+)
+
+with header_col:
     st.markdown(
         """
-        <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap');
-        html, body, [data-testid="stAppViewContainer"], .stApp {
-            height: 100vh;
-            overflow: hidden;
-        }
-        header[data-testid="stHeader"],
-        div[data-testid="stToolbar"],
-        div[data-testid="stDecoration"] {
-            display: none;
-        }
-        .stApp {
-            background: linear-gradient(135deg, #E0F2FE 0%, #EFF6FF 48%, #DFF7EF 100%);
-            color: #111827;
-            font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        }
-        .block-container {
-            max-width: 1450px;
-            height: calc(100vh - 1rem);
-            overflow: hidden;
-            padding: 0.74rem 1.2rem;
-            background: #FFFFFF;
-            border: 1px solid rgba(226, 232, 240, 0.9);
-            border-radius: 22px;
-            box-shadow: 0 24px 70px rgba(15, 23, 42, 0.16);
-            margin-top: 0.5rem;
-        }
-        section[data-testid="stSidebar"] { display: none; }
-        .top-nav {
-            background: linear-gradient(180deg, #F8FAFC 0%, #EEF6FF 100%);
-            border: 1px solid #E2E8F0;
-            border-radius: 16px;
-            padding: 0.48rem 0.7rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 0.52rem;
-            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
-        }
-        .brand-wrap { display: flex; align-items: center; gap: 0.55rem; }
-        .brand-dot {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background: #13B981;
-            color: white;
-            display: grid;
-            place-items: center;
-            font-weight: 800;
-            font-size: 0.82rem;
-        }
-        .brand-name { font-weight: 800; font-size: 1rem; }
-        .nav-link { color: #374151; margin-left: 1.05rem; font-size: 0.78rem; }
-        .nav-link.active { color: #13B981; font-weight: 800; }
-        .avatar {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            background: #13B981;
-            color: white;
-            display: grid;
-            place-items: center;
-            font-size: 0.75rem;
-            font-weight: 800;
-        }
-        .title-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: end;
-            margin: 0.2rem 0 0.45rem;
-        }
-        .title-text h1 {
-            font-size: 1.35rem;
-            margin: 0;
-            letter-spacing: 0;
-        }
-        .title-text p {
-            margin: 0.12rem 0 0;
-            color: #6B7280;
-            font-size: 0.73rem;
-        }
-        .filter-wrap {
-            display: flex;
-            justify-content: flex-end;
-            align-items: end;
-            gap: 0.75rem;
-            padding-top: 1.25rem;
-        }
-        .filter-pill {
-            background: #EAF2FF;
-            border: 1px solid #DCE7F7;
-            border-radius: 12px;
-            height: 38px;
-            display: flex;
-            align-items: center;
-            padding: 0 0.75rem;
-            color: #111827;
-            font-size: 0.75rem;
-        }
-        .kpi-card {
-            background: #FFFFFF;
-            border: 1px solid #E2E8F0;
-            border-radius: 16px;
-            padding: 0.66rem 0.78rem 0.48rem;
-            height: 126px;
-            box-sizing: border-box;
-            margin-bottom: 0.35rem;
-            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
-            transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
-        }
-        .kpi-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 18px 38px rgba(15, 23, 42, 0.12);
-        }
-        .kpi-card.highlight {
-            border-color: rgba(19, 185, 129, 0.55);
-            box-shadow: 0 18px 42px rgba(19, 185, 129, 0.16);
-        }
-        .kpi-top {
-            display: flex;
-            align-items: start;
-            justify-content: space-between;
-            margin-bottom: 0.28rem;
-        }
-        .kpi-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 12px;
-            display: grid;
-            place-items: center;
-            color: #FFFFFF;
-            font-weight: 800;
-            font-size: 0.9rem;
-        }
-        .kpi-delta { font-size: 0.72rem; font-weight: 800; }
-        .kpi-value { font-size: 1.22rem; font-weight: 850; color: #111827; line-height: 1.05; }
-        .kpi-label { color: #64748B; font-size: 0.68rem; margin-top: 0.18rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02rem; }
-        .kpi-compare { color: #94A3B8; font-size: 0.63rem; margin-top: 0.08rem; }
-        .sparkline { width: 100%; height: 28px; margin-top: 0.18rem; opacity: 0.95; }
-        .insights-card {
-            background: linear-gradient(135deg, #F8FAFC 0%, #EEFDF6 100%);
-            border: 1px solid #E2E8F0;
-            border-radius: 16px;
-            padding: 0.58rem 0.75rem;
-            box-shadow: 0 12px 26px rgba(15, 23, 42, 0.07);
-        }
-        .insights-title { font-size: 0.78rem; font-weight: 850; color: #111827; margin-bottom: 0.25rem; }
-        .insights-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.22rem 0.8rem; }
-        .insight-item { color: #334155; font-size: 0.66rem; line-height: 1.18; }
-        .panel-title { font-weight: 850; font-size: 0.9rem; margin-bottom: 0.1rem; }
-        .panel-insight { color: #4B5563; font-size: 0.68rem; line-height: 1.18; }
-        div[data-testid="stVerticalBlock"] { gap: 0.62rem; }
-        div[data-testid="stHorizontalBlock"] { gap: 0.95rem; }
-        div[data-testid="stPlotlyChart"] {
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
-            transition: transform 160ms ease, box-shadow 160ms ease;
-        }
-        div[data-testid="stPlotlyChart"]:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.11);
-        }
-        div[data-testid="stSelectbox"] > label,
-        div[data-testid="stRadio"] > label {
-            display: none;
-        }
-        div[data-baseweb="select"] > div {
-            min-height: 38px;
-            border-radius: 12px;
-            background: #F8FAFC;
-            border-color: #E2E8F0;
-            font-size: 0.75rem;
-        }
-        div[role="radiogroup"] {
-            background: #F8FAFC;
-            border: 1px solid #E2E8F0;
-            border-radius: 12px;
-            padding: 0.16rem 0.2rem;
-            gap: 0.15rem;
-            min-height: 38px;
-        }
-        div[role="radiogroup"] label {
-            background: transparent;
-            border-radius: 9px;
-            padding: 0.22rem 0.62rem;
-            color: #111827;
-            font-size: 0.75rem;
-        }
-        div[role="radiogroup"] label:has(input:checked) {
-            background: #13B981;
-            color: #FFFFFF;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
-def fig_style(fig: go.Figure, height: int, legend: bool = False, top_margin: int = 96) -> go.Figure:
-    fig.update_layout(
-        template="plotly_white",
-        height=height,
-        showlegend=legend,
-        margin=dict(l=8, r=8, t=top_margin, b=10),
-        paper_bgcolor="#FFFFFF",
-        plot_bgcolor="#FFFFFF",
-        font=dict(color=DARK, size=11),
-        legend=dict(orientation="h", yanchor="bottom", y=1.01, xanchor="right", x=1),
-    )
-    fig.update_xaxes(showgrid=False, title=None, tickfont=dict(size=10))
-    fig.update_yaxes(gridcolor=GRID, title=None, tickfont=dict(size=10))
-    return fig
-
-
-def add_chart_title(fig: go.Figure, title: str, insight: str) -> go.Figure:
-    fig.update_layout(
-        title=dict(
-            text=f"<b>{title}</b><br><span style='font-size:12px;color:#4B5563'>{insight}</span>",
-            x=0.02,
-            xanchor="left",
-            y=0.90,
-            yanchor="top",
-            font=dict(size=15, color=DARK),
-        )
-    )
-    return fig
-
-
-def kpi_card(
-    title: str,
-    value: str,
-    delta: str,
-    delta_color: str,
-    icon: str,
-    icon_color: str,
-    compare_text: str,
-    sparkline: str,
-    highlight: bool = False,
-) -> None:
-    highlight_class = " highlight" if highlight else ""
-    st.markdown(
-        f"""
-        <div class="kpi-card{highlight_class}">
-            <div class="kpi-top">
-                <div class="kpi-icon" style="background:{icon_color};">{icon}</div>
-                <div class="kpi-delta" style="color:{delta_color};">{delta}</div>
-            </div>
-            <div class="kpi-value">{value}</div>
-            <div class="kpi-label">{title}</div>
-            <div class="kpi-compare">{compare_text}</div>
-            {sparkline}
+        <div class="dashboard-head">
+            <div class="dashboard-title">☕ KopiSeru Marketing Dashboard</div>
+            <div class="dashboard-subtitle">Revenue, customer activity, channel mix and actionable marketing performance</div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
+all_years = sorted(df["year"].dropna().unique().astype(int).tolist())
+all_branches = sorted(df["branch_name"].dropna().astype(str).unique().tolist())
+all_cities = sorted(df["branch_city"].dropna().astype(str).unique().tolist())
+all_types = sorted(df["branch_type"].dropna().astype(str).unique().tolist())
+all_promos = sorted([p for p in df["promo_type"].dropna().astype(str).unique().tolist() if p != "No Promo"])
 
-def render_title_and_filters(df: pd.DataFrame) -> pd.DataFrame:
-    years = [str(year) for year in sorted(df["year"].unique())] + ["Semua"]
-    campaigns = ["All Coffee Campaign"] + sorted(
-        campaign for campaign in df["promo_type"].dropna().unique() if campaign != "Tanpa promo"
+with fy_col:
+    selected_year = st.selectbox("Year", ["All Years"] + [str(y) for y in all_years], index=0)
+with branch_col:
+    selected_branch = st.selectbox("Branch", ["All Branches"] + all_branches, index=0)
+with city_col:
+    selected_city = st.selectbox("City", ["All Cities"] + all_cities, index=0)
+with type_col:
+    selected_type = st.selectbox("Branch Type", ["All Types"] + all_types, index=0)
+with promo_col:
+    selected_promo = st.selectbox("Promo Type", ["All Promos"] + all_promos, index=0)
+
+# ============================================================
+# 7. APPLY FILTERS
+# ============================================================
+filtered = df.copy()
+
+if selected_year != "All Years":
+    filtered = filtered[filtered["year"] == int(selected_year)]
+if selected_branch != "All Branches":
+    filtered = filtered[filtered["branch_name"] == selected_branch]
+if selected_city != "All Cities":
+    filtered = filtered[filtered["branch_city"] == selected_city]
+if selected_type != "All Types":
+    filtered = filtered[filtered["branch_type"] == selected_type]
+if selected_promo != "All Promos":
+    filtered = filtered[filtered["promo_type"] == selected_promo]
+
+if filtered.empty:
+    st.warning("Tidak ada data untuk kombinasi filter yang dipilih.")
+    st.stop()
+
+# Previous year comparison, preserving non-year filters.
+if selected_year != "All Years":
+    previous = df[df["year"] == int(selected_year) - 1].copy()
+    if selected_branch != "All Branches":
+        previous = previous[previous["branch_name"] == selected_branch]
+    if selected_city != "All Cities":
+        previous = previous[previous["branch_city"] == selected_city]
+    if selected_type != "All Types":
+        previous = previous[previous["branch_type"] == selected_type]
+    if selected_promo != "All Promos":
+        previous = previous[previous["promo_type"] == selected_promo]
+    comparison_caption = "vs previous year"
+else:
+    previous = pd.DataFrame()
+    comparison_caption = "select a year for YoY"
+
+# ============================================================
+# 8. KPI CALCULATIONS
+# ============================================================
+total_revenue = filtered["total_revenue"].sum()
+total_transactions = filtered["total_transactions"].sum()
+total_cups = filtered["total_cups_sold"].sum()
+avg_ticket = weighted_ticket(filtered)
+
+if not previous.empty:
+    prev_revenue = previous["total_revenue"].sum()
+    prev_transactions = previous["total_transactions"].sum()
+    prev_cups = previous["total_cups_sold"].sum()
+    prev_ticket = weighted_ticket(previous)
+
+    delta_revenue = calc_delta(total_revenue, prev_revenue)
+    delta_transactions = calc_delta(total_transactions, prev_transactions)
+    delta_cups = calc_delta(total_cups, prev_cups)
+    delta_ticket = calc_delta(avg_ticket, prev_ticket)
+else:
+    delta_revenue = None
+    delta_transactions = None
+    delta_cups = None
+    delta_ticket = None
+
+# ============================================================
+# 9. PART 1 — KPI CARDS
+# ============================================================
+k1, k2, k3, k4 = st.columns(4)
+
+with k1:
+    st.markdown(
+        html_kpi("💰", "Revenue", format_rupiah(total_revenue), delta_revenue, comparison_caption),
+        unsafe_allow_html=True,
     )
-    periods = ["Full Year", "Q1", "Q2", "Q3", "Q4"]
+with k2:
+    st.markdown(
+        html_kpi("👥", "Total Transactions", format_number(total_transactions), delta_transactions, comparison_caption),
+        unsafe_allow_html=True,
+    )
+with k3:
+    st.markdown(
+        html_kpi("🎟️", "Avg Ticket Size", format_rupiah(avg_ticket), delta_ticket, comparison_caption),
+        unsafe_allow_html=True,
+    )
+with k4:
+    st.markdown(
+        html_kpi("☕", "Cups Sold", format_number(total_cups), delta_cups, comparison_caption),
+        unsafe_allow_html=True,
+    )
 
-    title_left, title_right = st.columns([1.05, 1.35])
-    with title_left:
+# ============================================================
+# 10. PART 2 — MIDDLE ROW
+#     A. Monthly Performance Overview
+#     B. Customer Channel Mix
+# ============================================================
+mid_left, mid_right = st.columns([5.1, 3.0])
+
+# ---------- A. Performance Overview ----------
+with mid_left:
+    with st.container(border=True):
         st.markdown(
-            """
-            <div class="title-text">
-                <h1>Analytics Dashboard</h1>
-            </div>
-            """,
+            '<div class="chart-title">Performance Overview</div>'
+            '<div class="chart-subtitle">Monthly trend for Revenue and Transactions</div>',
             unsafe_allow_html=True,
         )
-        selected_campaign = st.selectbox("Campaign", campaigns, label_visibility="collapsed")
 
-    with title_right:
-        c1, c2 = st.columns([1.7, 0.9])
-        with c1:
-            selected_year = st.radio("Tahun", years, horizontal=True, label_visibility="collapsed")
-        with c2:
-            selected_period = st.selectbox("Periode", periods, label_visibility="collapsed")
-
-    result = df.copy()
-    if selected_campaign != "All Coffee Campaign":
-        result = result[result["promo_type"] == selected_campaign]
-    if selected_year != "Semua":
-        result = result[result["year"] == int(selected_year)]
-    if selected_period != "Full Year":
-        quarter = int(selected_period.replace("Q", ""))
-        result = result[result["date"].dt.quarter == quarter]
-    return result
-
-
-def metric_delta(df: pd.DataFrame, metric: str) -> tuple[str, str]:
-    yearly = df.groupby("year")[metric].sum().sort_index()
-    if len(yearly) < 2:
-        return "+0.0%", BRAND
-    return growth(yearly.iloc[-1], yearly.iloc[-2])
-
-
-def build_dashboard(df: pd.DataFrame) -> None:
-    if df.empty:
-        st.warning("Tidak ada data pada filter ini. Pilih kombinasi lain.")
-        return
-
-    revenue = df["total_revenue"].sum()
-    cost = df["operating_cost"].sum()
-    profit = revenue - cost
-    margin = profit / revenue if revenue else 0
-    cups = df["total_cups_sold"].sum()
-    satisfaction = df["customer_satisfaction"].mean()
-
-    monthly_kpi = (
-        df.groupby("month", as_index=False)
-        .agg(
-            revenue=("total_revenue", "sum"),
-            profit=("gross_profit", "sum"),
-            cups=("total_cups_sold", "sum"),
+        monthly = (
+            filtered.groupby("month_period", as_index=False)
+            .agg(
+                revenue=("total_revenue", "sum"),
+                transactions=("total_transactions", "sum"),
+            )
+            .sort_values("month_period")
         )
-        .sort_values("month")
-    )
-    monthly_kpi["margin"] = monthly_kpi["profit"] / monthly_kpi["revenue"].where(monthly_kpi["revenue"] != 0)
+        monthly["date"] = monthly["month_period"].dt.to_timestamp()
 
-    yearly = (
-        df.assign(margin_value=df["gross_profit"] / df["total_revenue"].where(df["total_revenue"] != 0))
-        .groupby("year")
-        .agg(
-            revenue=("total_revenue", "sum"),
-            profit=("gross_profit", "sum"),
-            cups=("total_cups_sold", "sum"),
-            margin=("margin_value", "mean"),
-        )
-        .sort_index()
-    )
-    if len(yearly) >= 2:
-        rev_growth, rev_delta, rev_color = growth_tuple(yearly["revenue"].iloc[-1], yearly["revenue"].iloc[-2])
-        profit_growth, profit_delta, profit_color = growth_tuple(yearly["profit"].iloc[-1], yearly["profit"].iloc[-2])
-        cup_growth, cup_delta, cup_color = growth_tuple(yearly["cups"].iloc[-1], yearly["cups"].iloc[-2])
-        margin_growth, margin_delta, margin_color = growth_tuple(yearly["margin"].iloc[-1], yearly["margin"].iloc[-2])
-    else:
-        rev_growth, rev_delta, rev_color = 0, "▲ 0.0%", BRAND
-        profit_growth, profit_delta, profit_color = 0, "▲ 0.0%", BRAND
-        cup_growth, cup_delta, cup_color = 0, "▲ 0.0%", BRAND
-        margin_growth, margin_delta, margin_color = 0, "▲ 0.0%", BRAND
-    growth_scores = {
-        "revenue": rev_growth,
-        "profit": profit_growth,
-        "cups": cup_growth,
-        "margin": margin_growth,
-    }
-    highest_growth = max(growth_scores, key=growth_scores.get)
+        fig_perf = make_subplots(specs=[[{"secondary_y": True}]])
 
-    k1, k2, k3, k4 = st.columns(4)
-    with k1:
-        kpi_card(
-            "Revenue",
-            rupiah(revenue),
-            rev_delta,
-            rev_color,
-            "R",
-            BRAND,
-            "vs Last Year",
-            sparkline_svg(monthly_kpi["revenue"], BRAND),
-            highest_growth == "revenue",
-        )
-    with k2:
-        kpi_card(
-            "Gross Profit",
-            rupiah(profit),
-            profit_delta,
-            profit_color,
-            "P",
-            BLUE,
-            "vs Last Year",
-            sparkline_svg(monthly_kpi["profit"], BLUE),
-            highest_growth == "profit",
-        )
-    with k3:
-        kpi_card(
-            "Cups Sold",
-            number(cups),
-            cup_delta,
-            cup_color,
-            "C",
-            "#22C55E",
-            "vs Last Year",
-            sparkline_svg(monthly_kpi["cups"], BRAND),
-            highest_growth == "cups",
-        )
-    with k4:
-        kpi_card(
-            "Profit Margin",
-            pct(margin),
-            margin_delta,
-            margin_color,
-            "%",
-            ORANGE,
-            "vs Last Year",
-            sparkline_svg(monthly_kpi["margin"], ORANGE),
-            highest_growth == "margin",
-        )
-
-    st.markdown("<div style='height:0.12rem'></div>", unsafe_allow_html=True)
-
-    monthly = (
-        df.groupby("month", as_index=False)
-        .agg(revenue=("total_revenue", "sum"), profit=("gross_profit", "sum"))
-        .sort_values("month")
-    )
-    peak = monthly.loc[monthly["revenue"].idxmax()]
-    latest = monthly.iloc[-1]
-    previous = monthly.iloc[-2] if len(monthly) > 1 else monthly.iloc[-1]
-    latest_growth, _ = growth(latest["revenue"], previous["revenue"])
-
-    channel = pd.DataFrame(
-        {
-            "Channel": ["Dine in", "Delivery", "Takeaway"],
-            "Revenue": [
-                (df["total_revenue"] * df["dine_in_percent"] / 100).sum(),
-                (df["total_revenue"] * df["delivery_percent"] / 100).sum(),
-                (df["total_revenue"] * df["takeaway_percent"] / 100).sum(),
-            ],
-            "Gross Profit": [
-                (df["gross_profit"] * df["dine_in_percent"] / 100).sum(),
-                (df["gross_profit"] * df["delivery_percent"] / 100).sum(),
-                (df["gross_profit"] * df["takeaway_percent"] / 100).sum(),
-            ],
-        }
-    ).sort_values("Revenue", ascending=True)
-    top_channel = channel.sort_values("Revenue", ascending=False).iloc[0]
-
-    chart_left, chart_right = st.columns([2.15, 1])
-    with chart_left:
-        monthly["revenue_growth"] = monthly["revenue"].pct_change().fillna(0) * 100
-        avg_revenue = monthly["revenue"].mean()
-        target_revenue = avg_revenue * 1.15
-        promo_month = (
-            df[df["promo_type"] != "Tanpa promo"]
-            .groupby("month", as_index=False)
-            .agg(promo_revenue=("total_revenue", "sum"))
-            .sort_values("promo_revenue", ascending=False)
-        )
-        milestone_month = promo_month.iloc[0]["month"] if not promo_month.empty else peak["month"]
-        fig = make_subplots(specs=[[{"secondary_y": True}]])
-        fig.add_trace(
+        fig_perf.add_trace(
             go.Scatter(
-                x=monthly["month"],
+                x=monthly["date"],
                 y=monthly["revenue"],
-                name="Revenue",
-                mode="lines",
+                name="Revenue (Rp)",
+                mode="lines+markers",
+                line=dict(color=BROWN_800, width=2.0),
+                marker=dict(size=4.5, color=BROWN_800),
                 fill="tozeroy",
-                line=dict(color=BRAND, width=3, shape="spline"),
-                fillcolor="rgba(19, 185, 129, 0.12)",
+                fillcolor="rgba(78,52,46,0.045)",
                 hovertemplate="<b>%{x|%b %Y}</b><br>Revenue: Rp %{y:,.0f}<extra></extra>",
             ),
             secondary_y=False,
         )
-        fig.add_trace(
+
+        fig_perf.add_trace(
             go.Scatter(
-                x=monthly["month"],
-                y=monthly["profit"],
-                name="Gross Profit",
-                mode="lines",
-                line=dict(color=BLUE, width=2.5, shape="spline"),
-                hovertemplate="%{x|%b %Y}<br>Profit: Rp %{y:,.0f}<extra></extra>",
-            ),
-            secondary_y=False,
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=monthly["month"],
-                y=monthly["revenue_growth"],
-                name="Revenue Growth",
+                x=monthly["date"],
+                y=monthly["transactions"],
+                name="Transactions",
                 mode="lines+markers",
-                line=dict(color=ORANGE, width=2, dash="dot"),
-                marker=dict(size=5),
-                hovertemplate="%{x|%b %Y}<br>Growth: %{y:.1f}%<extra></extra>",
+                line=dict(color=BROWN_500, width=1.7, dash="dot"),
+                marker=dict(size=4.0, color=BROWN_500),
+                hovertemplate="<b>%{x|%b %Y}</b><br>Transactions: %{y:,.0f}<extra></extra>",
             ),
             secondary_y=True,
         )
-        fig = add_chart_title(
-            fig,
-            "Performance Overview",
-            f"Revenue trend {latest_growth}; growth line highlights significant monthly movement.",
-        )
-        fig.add_hline(y=avg_revenue, line_dash="dash", line_color="#94A3B8", annotation_text="Avg Revenue", annotation_position="top left")
-        fig.add_hline(y=target_revenue, line_dash="dot", line_color=ORANGE, annotation_text="Target", annotation_position="top left")
-        fig.add_vline(x=milestone_month, line_width=1, line_dash="dot", line_color="#64748B", annotation_text="Campaign peak", annotation_position="top")
-        fig.update_yaxes(title_text=None, secondary_y=False)
-        fig.update_yaxes(title_text="Growth %", secondary_y=True, showgrid=False, tickfont=dict(size=9))
-        fig.update_layout(hovermode="x unified")
-        st.plotly_chart(fig_style(fig, 292, True, top_margin=72), use_container_width=True, config={"displayModeBar": False})
 
-    with chart_right:
-        channel_desc = channel.sort_values("Revenue", ascending=False).copy()
-        channel_desc["Contribution"] = channel_desc["Revenue"] / channel_desc["Revenue"].sum()
-        channel_display = channel_desc.sort_values("Revenue", ascending=True)
-        channel_display["Revenue Label"] = channel_display.apply(lambda row: f"{rupiah(row['Revenue'])} • {pct(row['Contribution'])}", axis=1)
-        channel_display["Profit Label"] = channel_display["Gross Profit"].map(rupiah)
-        fig_channel = go.Figure()
-        fig_channel.add_trace(
-            go.Bar(
-                y=channel_display["Channel"],
-                x=channel_display["Revenue"],
+        solid_plot_layout(fig_perf, 205)
+        fig_perf.update_layout(
+            margin=dict(l=8, r=8, t=12, b=8),
+            legend=dict(
                 orientation="h",
-                name="Revenue",
-                marker_color=BRAND,
-                text=channel_display["Revenue Label"],
-                textposition="outside",
-                hovertemplate="%{y}<br>Revenue: Rp %{x:,.0f}<extra></extra>",
+                yanchor="bottom",
+                y=1.01,
+                xanchor="center",
+                x=0.5,
+                font=dict(size=8),
+                bgcolor="rgba(255,255,255,0)",
+            ),
+            hovermode="x unified",
+        )
+        fig_perf.update_xaxes(
+            showgrid=False,
+            showline=True,
+            linecolor=BORDER,
+            tickformat="%b\n%Y",
+            tickfont=dict(size=8, color=BROWN_700),
+            nticks=min(12, max(len(monthly), 2)),
+        )
+        fig_perf.update_yaxes(
+            secondary_y=False,
+            showgrid=True,
+            gridcolor=GRID,
+            zeroline=False,
+            tickfont=dict(size=8),
+            tickformat="~s",
+            title_text="",
+        )
+        fig_perf.update_yaxes(
+            secondary_y=True,
+            showgrid=False,
+            zeroline=False,
+            tickfont=dict(size=8),
+            tickformat="~s",
+            title_text="",
+        )
+
+        st.plotly_chart(
+            fig_perf,
+            use_container_width=True,
+            config={"displayModeBar": False, "responsive": True},
+        )
+
+# ---------- B. Customer Channel Mix ----------
+with mid_right:
+    with st.container(border=True):
+        st.markdown(
+            '<div class="chart-title">Customer Channel Mix</div>'
+            '<div class="chart-subtitle">Estimated share of transactions by customer channel</div>',
+            unsafe_allow_html=True,
+        )
+
+        # More valid than "revenue by channel": estimate transaction counts
+        # because dataset contains channel percentages, not actual channel revenue.
+        channel_data = pd.DataFrame(
+            {
+                "Channel": ["Takeaway", "Dine-In", "Delivery"],
+                "Transactions": [
+                    (filtered["takeaway_percent"] / 100 * filtered["total_transactions"]).sum(),
+                    (filtered["dine_in_percent"] / 100 * filtered["total_transactions"]).sum(),
+                    (filtered["delivery_percent"] / 100 * filtered["total_transactions"]).sum(),
+                ],
+            }
+        )
+
+        fig_channel = go.Figure(
+            go.Pie(
+                labels=channel_data["Channel"],
+                values=channel_data["Transactions"],
+                hole=0.57,
+                sort=False,
+                marker=dict(colors=[BROWN_800, BROWN_500, "#E2C5A8"], line=dict(color=CARD_WHITE, width=1.2)),
+                textinfo="percent",
+                textposition="inside",
+                textfont=dict(size=9, family="Inter", color=CARD_WHITE),
+                hovertemplate="<b>%{label}</b><br>Estimated transactions: %{value:,.0f}<br>Share: %{percent}<extra></extra>",
             )
         )
-        fig_channel.add_trace(
-            go.Bar(
-                y=channel_display["Channel"],
-                x=channel_display["Gross Profit"],
-                orientation="h",
-                name="Gross Profit",
-                marker_color=BLUE,
-                text=channel_display["Profit Label"],
-                textposition="outside",
-                hovertemplate="%{y}<br>Gross Profit: Rp %{x:,.0f}<extra></extra>",
-            )
-        )
-        fig_channel = add_chart_title(
-            fig_channel,
-            "Revenue & Profit by Channel",
-            f"{top_channel['Channel']} contributes the highest channel revenue.",
-        )
-        fig_channel.update_layout(barmode="group")
-        st.plotly_chart(fig_style(fig_channel, 292, top_margin=72), use_container_width=True, config={"displayModeBar": False})
-
-    branch = (
-        df.groupby(["branch_name", "branch_city"], as_index=False)
-        .agg(revenue=("total_revenue", "sum"), profit=("gross_profit", "sum"), satisfaction=("customer_satisfaction", "mean"))
-        .sort_values("revenue", ascending=False)
-    )
-    latest_month = df["month"].max()
-    previous_month = latest_month - pd.DateOffset(months=1)
-    current_branch = (
-        df[df["month"] == latest_month]
-        .groupby("branch_name", as_index=False)
-        .agg(current_revenue=("total_revenue", "sum"))
-    )
-    previous_branch = (
-        df[df["month"] == previous_month]
-        .groupby("branch_name", as_index=False)
-        .agg(previous_revenue=("total_revenue", "sum"))
-    )
-    branch = branch.merge(current_branch, on="branch_name", how="left").merge(previous_branch, on="branch_name", how="left")
-    branch[["current_revenue", "previous_revenue"]] = branch[["current_revenue", "previous_revenue"]].fillna(0)
-    branch["growth"] = branch.apply(lambda row: growth_value(row["current_revenue"], row["previous_revenue"]), axis=1)
-
-    category = (
-        df.groupby("top_selling_category", as_index=False)
-        .agg(cups=("total_cups_sold", "sum"), revenue=("total_revenue", "sum"), profit=("gross_profit", "sum"))
-        .sort_values("profit", ascending=False)
-    )
-    category_melt = category.melt(
-        id_vars="top_selling_category",
-        value_vars=["revenue", "profit"],
-        var_name="Metric",
-        value_name="Value",
-    )
-    category_melt["Metric"] = category_melt["Metric"].map({"revenue": "Revenue", "profit": "Gross Profit"})
-
-    promo_active_df = df[df["promo_type"] != "Tanpa promo"].copy()
-    promo_active_df["promo_cost_est"] = promo_active_df["total_revenue"] * 0.08
-    promo_active_df["promo_roi"] = (promo_active_df["gross_profit"] - promo_active_df["promo_cost_est"]) / promo_active_df["promo_cost_est"].where(
-        promo_active_df["promo_cost_est"] != 0
-    )
-    promo = (
-        promo_active_df.groupby("promo_type", as_index=False)
-        .agg(revenue=("total_revenue", "sum"), gross_profit=("gross_profit", "sum"), promo_cost=("promo_cost_est", "sum"))
-    )
-    promo["roi"] = (promo["gross_profit"] - promo["promo_cost"]) / promo["promo_cost"].where(promo["promo_cost"] != 0)
-    promo = promo.sort_values("roi", ascending=False)
-
-    best_branch = branch.sort_values("revenue", ascending=False).iloc[0]
-    best_category = category.sort_values("profit", ascending=False).iloc[0]
-    best_promo_name = promo.iloc[0]["promo_type"] if not promo.empty else "Tidak ada promo aktif"
-    insights = [
-        f"Revenue moved {latest_growth} in the latest month.",
-        f"{peak['month']:%b %Y} is the highest revenue month.",
-        f"{top_channel['Channel']} contributes the highest channel revenue.",
-        f"{best_promo_name} has the strongest estimated ROI.",
-        f"{best_category['top_selling_category']} generates the highest gross profit.",
-        f"{best_branch['branch_name']} is the top-performing branch.",
-    ]
-    insight_items = "".join(f"<div class='insight-item'>✓ {item}</div>" for item in insights)
-    st.markdown(
-        f"""
-        <div class="insights-card">
-            <div class="insights-title">Business Insights</div>
-            <div class="insights-grid">{insight_items}</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    bottom_left, bottom_mid, bottom_right = st.columns([1, 1, 1])
-    with bottom_left:
-        branch_top = branch.head(5).sort_values("revenue", ascending=True)
-        branch_top["growth_label"] = branch_top["growth"].map(lambda value: f"{value * 100:+.1f}%")
-        branch_top["bar_label"] = branch_top.apply(lambda row: f"{rupiah(row['revenue'])}  {row['growth_label']}", axis=1)
-        branch_top["bar_color"] = branch_top["growth"].map(lambda value: RED if value < 0 else BRAND)
-        fig_branch = px.bar(
-            branch_top,
-            x="revenue",
-            y="branch_name",
-            orientation="h",
-            text="bar_label",
-            color_discrete_sequence=[BRAND],
-            hover_data={"branch_city": True, "revenue": ":,.0f", "growth_label": True, "branch_name": False, "growth": False},
-        )
-        fig_branch.update_traces(marker_color=branch_top["bar_color"], textposition="outside", cliponaxis=False)
-        fig_branch = add_chart_title(
-            fig_branch,
-            "Top Branch Revenue & Growth",
-            f"{best_branch['branch_name']} leads; red only flags negative growth.",
-        )
-        st.plotly_chart(fig_style(fig_branch, 202), use_container_width=True, config={"displayModeBar": False})
-    with bottom_mid:
-        category_chart = category_melt[category_melt["top_selling_category"].isin(category.head(5)["top_selling_category"])]
-        order = category.head(5).sort_values("profit", ascending=True)["top_selling_category"]
-        category_chart["top_selling_category"] = pd.Categorical(category_chart["top_selling_category"], categories=order, ordered=True)
-        category_chart = category_chart.sort_values("top_selling_category")
-        revenue_category = category_chart[category_chart["Metric"] == "Revenue"]
-        profit_category = category_chart[category_chart["Metric"] == "Gross Profit"]
-        highlight_lines = [ORANGE if category_name == best_category["top_selling_category"] else "rgba(0,0,0,0)" for category_name in profit_category["top_selling_category"]]
-        fig_category = go.Figure()
-        fig_category.add_trace(
-            go.Bar(
-                y=revenue_category["top_selling_category"],
-                x=revenue_category["Value"],
-                orientation="h",
-                name="Revenue",
-                marker_color=BLUE,
-                text=revenue_category["Value"].map(rupiah),
-                textposition="outside",
-                hovertemplate="%{y}<br>Revenue: Rp %{x:,.0f}<extra></extra>",
-            )
-        )
-        fig_category.add_trace(
-            go.Bar(
-                y=profit_category["top_selling_category"],
-                x=profit_category["Value"],
-                orientation="h",
-                name="Gross Profit",
-                marker_color=BRAND,
-                marker_line_color=highlight_lines,
-                marker_line_width=[3 if color == ORANGE else 0 for color in highlight_lines],
-                text=profit_category["Value"].map(rupiah),
-                textposition="outside",
-                hovertemplate="%{y}<br>Gross Profit: Rp %{x:,.0f}<extra></extra>",
-            )
-        )
-        fig_category = add_chart_title(
-            fig_category,
-            "Top Category by Revenue & Profit",
-            f"{best_category['top_selling_category']} delivers the highest gross profit.",
-        )
-        fig_category.update_layout(barmode="group")
-        st.plotly_chart(fig_style(fig_category, 202), use_container_width=True, config={"displayModeBar": False})
-    with bottom_right:
-        promo_chart = promo.head(5).sort_values("roi", ascending=False)
-        if promo_chart.empty:
-            promo_chart = pd.DataFrame({"promo_type": ["Tidak ada promo aktif"], "roi": [0], "revenue": [0], "promo_cost": [0], "gross_profit": [0]})
-            best_promo = promo_chart.iloc[0]
-        else:
-            best_promo = promo.sort_values("roi", ascending=False).iloc[0]
-        promo_chart["roi_pct"] = promo_chart["roi"] * 100
-        fig_promo = go.Figure(
-            data=[
-                go.Table(
-                    header=dict(
-                        values=["Promo", "ROI", "Revenue", "Cost", "Profit"],
-                        fill_color="#F8FAFC",
-                        align="left",
-                        font=dict(color=DARK, size=11),
-                        line_color="#E2E8F0",
-                    ),
-                    cells=dict(
-                        values=[
-                            promo_chart["promo_type"],
-                            promo_chart["roi_pct"].map(lambda value: f"{value:.1f}%"),
-                            promo_chart["revenue"].map(rupiah),
-                            promo_chart["promo_cost"].map(rupiah),
-                            promo_chart["gross_profit"].map(rupiah),
-                        ],
-                        fill_color="#FFFFFF",
-                        align="left",
-                        font=dict(color="#334155", size=10),
-                        height=25,
-                        line_color="#E2E8F0",
-                    ),
+        solid_plot_layout(fig_channel, 205)
+        fig_channel.update_layout(
+            margin=dict(l=2, r=2, t=8, b=4),
+            showlegend=True,
+            legend=dict(
+                orientation="v",
+                yanchor="middle",
+                y=0.52,
+                xanchor="left",
+                x=0.79,
+                font=dict(size=8.5, color=BROWN_700),
+            ),
+            annotations=[
+                dict(
+                    text=f"<b>{format_number(total_transactions)}</b><br><span style='font-size:8px'>Transactions</span>",
+                    x=0.37,
+                    y=0.50,
+                    showarrow=False,
+                    align="center",
+                    font=dict(size=10, color=BROWN_900, family="Inter"),
                 )
-            ]
+            ],
         )
-        fig_promo = add_chart_title(
-            fig_promo,
-            "Promo ROI",
-            f"{best_promo['promo_type']} has the strongest estimated promo ROI.",
+
+        st.plotly_chart(
+            fig_channel,
+            use_container_width=True,
+            config={"displayModeBar": False, "responsive": True},
         )
-        st.plotly_chart(fig_style(fig_promo, 202), use_container_width=True, config={"displayModeBar": False})
 
+# ============================================================
+# 11. PART 3 — BOTTOM ROW, THREE ACTIONABLE MARKETING CHARTS
+# ============================================================
+b1, b2, b3 = st.columns(3)
 
-def main() -> None:
-    apply_style()
-    df = load_data(DATA_PATH)
+# ---------- A. Promo vs Non Promo ----------
+with b1:
+    with st.container(border=True):
+        st.markdown(
+            '<div class="chart-title">Promo vs Non Promo</div>'
+            '<div class="chart-subtitle">Average revenue per branch-day</div>',
+            unsafe_allow_html=True,
+        )
 
-    st.markdown(
-        """
-        <div class="top-nav">
-            <div class="brand-wrap">
-                <div class="brand-dot">KS</div>
-                <div class="brand-name">MarketPro</div>
-                <div class="nav-link">Campaign Manager</div>
-                <div class="nav-link active">Analytics</div>
-                <div class="nav-link">Templates</div>
-                <div class="nav-link">Automation</div>
-                <div class="nav-link">Settings</div>
-            </div>
-            <div class="avatar">JD</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+        promo_perf = (
+            filtered.groupby("promo_status", as_index=False)
+            .agg(avg_revenue=("total_revenue", "mean"))
+        )
+        promo_order = ["Promo", "Non Promo"]
+        promo_perf["promo_status"] = pd.Categorical(
+            promo_perf["promo_status"], categories=promo_order, ordered=True
+        )
+        promo_perf = promo_perf.sort_values("promo_status")
 
-    filtered = render_title_and_filters(df)
-    build_dashboard(filtered)
+        fig_promo = go.Figure(
+            go.Bar(
+                x=promo_perf["promo_status"].astype(str),
+                y=promo_perf["avg_revenue"],
+                marker=dict(color=[BROWN_800, "#D9B996"][: len(promo_perf)], cornerradius=5),
+                text=[format_rupiah(v) for v in promo_perf["avg_revenue"]],
+                textposition="outside",
+                textfont=dict(size=8.5, color=BROWN_900, family="Inter"),
+                hovertemplate="<b>%{x}</b><br>Avg revenue / branch-day: Rp %{y:,.0f}<extra></extra>",
+            )
+        )
+        solid_plot_layout(fig_promo, 200)
+        max_promo = promo_perf["avg_revenue"].max() if not promo_perf.empty else 1
+        fig_promo.update_layout(
+            margin=dict(l=5, r=5, t=12, b=4),
+            showlegend=False,
+            xaxis=dict(showgrid=False, showline=True, linecolor=BORDER, tickfont=dict(size=8.5)),
+            yaxis=dict(
+                showgrid=True,
+                gridcolor=GRID,
+                zeroline=False,
+                tickformat="~s",
+                tickfont=dict(size=8),
+                range=[0, max_promo * 1.25],
+            ),
+        )
+        st.plotly_chart(fig_promo, use_container_width=True, config={"displayModeBar": False})
 
+# ---------- B. Leading Category Performance ----------
+with b2:
+    with st.container(border=True):
+        st.markdown(
+            '<div class="chart-title">Top Category Performance</div>'
+            '<div class="chart-subtitle">Revenue when each category is recorded as the leading category</div>',
+            unsafe_allow_html=True,
+        )
 
-if __name__ == "__main__":
-    main()
+        cat_rev = (
+            filtered.groupby("top_selling_category", as_index=False)
+            .agg(revenue=("total_revenue", "sum"))
+            .sort_values("revenue", ascending=True)
+        )
+
+        fig_cat = go.Figure(
+            go.Bar(
+                y=cat_rev["top_selling_category"],
+                x=cat_rev["revenue"],
+                orientation="h",
+                marker=dict(color=BROWN_800, cornerradius=4),
+                text=[format_rupiah(v) for v in cat_rev["revenue"]],
+                textposition="outside",
+                textfont=dict(size=7.8, color=BROWN_700, family="Inter"),
+                hovertemplate="<b>%{y}</b><br>Associated revenue: Rp %{x:,.0f}<extra></extra>",
+            )
+        )
+        solid_plot_layout(fig_cat, 200)
+        max_cat = cat_rev["revenue"].max() if not cat_rev.empty else 1
+        fig_cat.update_layout(
+            margin=dict(l=5, r=62, t=8, b=4),
+            showlegend=False,
+            xaxis=dict(
+                showgrid=False,
+                showticklabels=False,
+                zeroline=False,
+                range=[0, max_cat * 1.28],
+            ),
+            yaxis=dict(showgrid=False, tickfont=dict(size=7.7, color=BROWN_700)),
+        )
+        st.plotly_chart(fig_cat, use_container_width=True, config={"displayModeBar": False})
+
+# ---------- C. Weekday vs Weekend ----------
+with b3:
+    with st.container(border=True):
+        st.markdown(
+            '<div class="chart-title">Weekday vs Weekend Performance</div>'
+            '<div class="chart-subtitle">Comparison of revenue, transactions and weighted ticket size</div>',
+            unsafe_allow_html=True,
+        )
+
+        rows = []
+        for day_type in ["Weekday", "Weekend"]:
+            part = filtered[filtered["day_type"] == day_type]
+            rows.append(
+                {
+                    "day_type": day_type,
+                    "avg_revenue": part["total_revenue"].mean() if not part.empty else 0,
+                    "avg_transactions": part["total_transactions"].mean() if not part.empty else 0,
+                    "avg_ticket": weighted_ticket(part) if not part.empty else 0,
+                }
+            )
+        ww = pd.DataFrame(rows)
+
+        metrics = ["Avg Revenue", "Avg Transactions", "Avg Ticket"]
+        weekday_vals = [
+            ww.loc[ww["day_type"] == "Weekday", "avg_revenue"].iloc[0],
+            ww.loc[ww["day_type"] == "Weekday", "avg_transactions"].iloc[0],
+            ww.loc[ww["day_type"] == "Weekday", "avg_ticket"].iloc[0],
+        ]
+        weekend_vals = [
+            ww.loc[ww["day_type"] == "Weekend", "avg_revenue"].iloc[0],
+            ww.loc[ww["day_type"] == "Weekend", "avg_transactions"].iloc[0],
+            ww.loc[ww["day_type"] == "Weekend", "avg_ticket"].iloc[0],
+        ]
+
+        # Normalize each metric within its pair for visual comparability,
+        # while showing actual values as labels/hover.
+        max_pair = np.maximum(np.array(weekday_vals, dtype=float), np.array(weekend_vals, dtype=float))
+        max_pair[max_pair == 0] = 1
+        weekday_norm = np.array(weekday_vals) / max_pair * 100
+        weekend_norm = np.array(weekend_vals) / max_pair * 100
+
+        weekday_labels = [format_rupiah(weekday_vals[0]), format_number(weekday_vals[1]), format_rupiah(weekday_vals[2])]
+        weekend_labels = [format_rupiah(weekend_vals[0]), format_number(weekend_vals[1]), format_rupiah(weekend_vals[2])]
+
+        fig_ww = go.Figure()
+        fig_ww.add_trace(
+            go.Bar(
+                x=metrics,
+                y=weekday_norm,
+                name="Weekday",
+                marker=dict(color=BROWN_800, cornerradius=4),
+                text=weekday_labels,
+                customdata=weekday_vals,
+                textposition="outside",
+                textfont=dict(size=7.4, color=BROWN_900),
+                hovertemplate="<b>Weekday · %{x}</b><br>Actual value: %{text}<extra></extra>",
+            )
+        )
+        fig_ww.add_trace(
+            go.Bar(
+                x=metrics,
+                y=weekend_norm,
+                name="Weekend",
+                marker=dict(color="#D9B996", cornerradius=4),
+                text=weekend_labels,
+                customdata=weekend_vals,
+                textposition="outside",
+                textfont=dict(size=7.4, color=BROWN_900),
+                hovertemplate="<b>Weekend · %{x}</b><br>Actual value: %{text}<extra></extra>",
+            )
+        )
+        solid_plot_layout(fig_ww, 200)
+        fig_ww.update_layout(
+            barmode="group",
+            margin=dict(l=4, r=4, t=12, b=4),
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.00,
+                xanchor="left",
+                x=0.0,
+                font=dict(size=7.8),
+            ),
+            xaxis=dict(showgrid=False, tickfont=dict(size=7.4), showline=True, linecolor=BORDER),
+            yaxis=dict(showgrid=True, gridcolor=GRID, showticklabels=False, zeroline=False, range=[0, 122]),
+        )
+        st.plotly_chart(fig_ww, use_container_width=True, config={"displayModeBar": False})
+
+# ============================================================
+# END
+# ============================================================

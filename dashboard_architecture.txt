@@ -1,0 +1,47 @@
+========================================================================
+             DOKUMENTASI ARSITEKTUR KOPISERU MARKETING DASHBOARD
+========================================================================
+
+1. PENDAHULUAN
+   KopiSeru Marketing Dashboard adalah aplikasi berbasis web satu halaman 
+   (one-screen dashboard) yang dirancang untuk menganalisis performa 
+   pemasaran dan finansial dari 40 cabang kedai kopi KopiSeru di Indonesia.
+   
+2. ALIRAN DATA (DATA FLOW)
+   [Dataset: coffe_shop_final.xlsx]
+                 │
+                 ▼
+     [app.py: load_data()] (Casting, Imputasi, Feature Engineering)
+                 │
+                 ▼
+    [Filter Cascading Streamlit] (Filter dinamis berbasis Session State)
+                 │
+                 ▼
+   [KPI & Chart Aggregations] (Metrik bisnis & visualisasi Plotly)
+                 │
+                 ▼
+      [Tampilan Streamlit UI] (HTML/CSS Kustom & Grid Layout)
+
+3. STRUKTUR GRID & TATA LETAK (LAYOUTING)
+   Aplikasi dirancang agar pas dalam satu layar laptop standar (1080p/720p) 
+   tanpa perlu scroll vertikal. Pembagian layout adalah sebagai berikut:
+   
+   - BARIS 1: Header Dashboard & Filter Cascading (Tahun, Cabang, Kota, Tipe, Promo)
+   - BARIS 2: 4 Kartu KPI Utama (Revenue, Transactions, Avg Ticket, Cups Sold)
+   - BARIS 3: Middle Row (Performance Overview [Line], Customer Channel Mix [Donut])
+   - BARIS 4: Bottom Row (Promo vs Non-Promo [Bar], Top Category [H-Bar], Weekday vs Weekend [G-Bar])
+
+4. SISTEM FILTER CASCADING (DINAMIS)
+   Untuk mencegah tampilan kosong (no-data crash), opsi filter saling terhubung 
+   menggunakan Streamlit Session State.
+   - Memilih cabang spesifik akan otomatis mengunci filter Kota dan Tipe Cabang 
+     yang bersangkutan.
+   - Pilihan filter divalidasi silang pada setiap render. Jika tidak valid, 
+     sistem otomatis mereset filter ke kondisi default ("All").
+
+5. DESAIN ANTARMUKA & CSS KUSTOM
+   - Font: Inter (Google Fonts) untuk keterbacaan tinggi.
+   - Tema Warna: Palet Kopi (Cokelat & Krem) dengan kontras putih untuk kartu visualisasi.
+   - Delta Indicators: Hijau (#2E7D32) untuk tren naik, Merah (#C62828) untuk tren turun.
+   - Scrollbar Hidden: Semua scrollbar dihilangkan secara paksa menggunakan CSS 
+     global untuk menjaga estetika satu halaman yang kokoh.

@@ -180,7 +180,7 @@ div[data-testid="stSelectbox"] {{
 
 div[data-testid="stSelectbox"] {{
     margin-top: -3px !important;
-    margin-bottom: -3px !important;
+    margin-bottom: 4px !important;
 }}
 
 div[data-testid="stSelectbox"] label {{
@@ -203,11 +203,11 @@ div[data-testid="stSelectbox"] label p {{
 }}
 
 div[data-baseweb="select"] > div {{
-    min-height: 30px !important;
-    height: 30px !important;
+    min-height: 26px !important;
+    height: 26px !important;
     background: #FFFFFF !important;
     border: 1px solid var(--border) !important;
-    border-radius: 9px !important;
+    border-radius: 8px !important;
     box-shadow: 0 1px 3px rgba(62,39,35,0.035) !important;
     padding-left: 0.08rem !important;
     overflow: hidden !important;

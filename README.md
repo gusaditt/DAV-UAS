@@ -35,6 +35,7 @@ DAV-UAS/
 ├── explore_data.py             # Script eksplorasi & validasi data
 ├── data_info.txt               # Output ringkasan info dataset
 ├── dashboard_architecture.txt  # Dokumentasi arsitektur aplikasi
+├── business_insights.md         # Laporan analisis bisnis & rekomendasi marketing
 ├── test_app.py                 # Unit testing untuk fungsi pembantu dashboard
 ├── requirements.txt            # Dependensi library Python
 ├── .gitignore                  # Konfigurasi Git Ignore

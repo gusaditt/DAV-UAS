@@ -32,6 +32,10 @@ DAV-UAS/
 │
 ├── app.py                      # Aplikasi utama Streamlit
 ├── coffe_shop_final.xlsx       # Dataset utama (28.748 baris, 24 kolom)
+├── explore_data.py             # Script eksplorasi & validasi data
+├── data_info.txt               # Output ringkasan info dataset
+├── dashboard_architecture.txt  # Dokumentasi arsitektur aplikasi
+├── test_app.py                 # Unit testing untuk fungsi pembantu dashboard
 ├── requirements.txt            # Dependensi library Python
 ├── .gitignore                  # Konfigurasi Git Ignore
 └── README.md                   # Dokumentasi proyek ini

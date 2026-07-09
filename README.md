@@ -75,6 +75,18 @@ set KOPISERU_DATA_PATH=C:\path\ke\data\kopiseru.xlsx
 streamlit run app.py
 ```
 
+### 4. Eksplorasi Data & Pengujian (Opsional)
+
+Untuk menjalankan skrip analisis data secara terpisah:
+```bash
+python explore_data.py
+```
+
+Untuk menjalankan unit testing fungsi pembantu secara otomatis:
+```bash
+python test_app.py
+```
+
 ---
 
 ## 📊 Dataset
@@ -198,13 +210,16 @@ Grafik batang kelompok (*grouped bar*) yang membandingkan performa antara **hari
 
 ---
 
-## 🎨 Desain & Estetika
+## 🎨 Prinsip Desain & Estetika
 
-- **Palet Warna**: Dominan cokelat-kopi & krem (`#3E2723` — `#F8F4EF`) dengan aksen hijau/merah untuk indikator delta
-- **Tipografi**: [Inter](https://fonts.google.com/specimen/Inter) dari Google Fonts (weight 300–800)
-- **Layout**: Full-screen tanpa scrollbar vertikal, dioptimasi untuk resolusi laptop standar
-- **Responsif**: Media query `@media (max-height: 720px)` untuk adaptasi saat browser di-zoom-in
-- **Animasi**: Micro-animations pada hover kartu KPI
+Dashboard ini dibangun dengan memprioritaskan kenyamanan pembaca (User-Centered Design) dan mematuhi prinsip-prinsip visualisasi data berikut:
+
+* **Satu Halaman (One-Screen Layout)**: Seluruh grafik dan kartu KPI dirancang muat dalam satu layar browser (tanpa scroll vertikal) untuk mencegah pecahnya konteks informasi bagi pengguna (Marketing Manager).
+* **Aliran Bacaan Alami**: Tata letak diatur dari kiri ke kanan (F-shape reading flow) menyesuaikan arah visual mata manusia.
+* **Konsistensi Desain**: Menggunakan palet warna cokelat & krem yang konsisten (`#3E2723` — `#F8F4EF`) dengan latar belakang kartu berwarna putih bersih untuk keterbacaan tinggi.
+* **Warna Aksen Terarah**: Warna menyala (merah/hijau) hanya digunakan secara bijak untuk indikator perubahan (KPI Delta) agar tidak menimbulkan kebisingan visual (*visual noise*).
+* **Cascading Filters**: Interaksi filter dinamis berbasis *Session State* mencegah error data kosong dan memudahkan eksplorasi bertingkat tanpa kebingungan cara pakai.
+* **Tipografi Modern**: Menggunakan font [Inter](https://fonts.google.com/specimen/Inter) yang sangat bersahabat bagi mata pembaca untuk berbagai resolusi layar.
 
 ---
 

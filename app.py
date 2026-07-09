@@ -457,12 +457,12 @@ p:empty {{ display: none !important; }}
 @media (max-height: 720px) {{
     .dashboard-head {{ min-height: 34px; margin-top: 8px; }}
     div[data-testid="stHorizontalBlock"]:has(.kpi-card) {{
-        min-height: 68px !important;
-        height: 68px !important;
+        min-height: 72px !important;
+        height: 72px !important;
         margin-bottom: 0.05rem !important;
     }}
-    .kpi-card {{ height: 60px; min-height: 60px; }}
-    .kpi-caption {{ display: none; }}
+    .kpi-card {{ height: 64px; min-height: 64px; }}
+    .kpi-caption {{ font-size: 0.48rem; margin-top: 2px; }}
     .stPlotlyChart {{ margin-top: 0.30rem !important; }}
     div[data-testid="stVerticalBlockBorderWrapper"] {{
         padding: 0.20rem 0.35rem 0.10rem 0.35rem !important;
@@ -812,7 +812,7 @@ if selected_year != "All Years":
     comparison_caption = "vs previous year"
 else:
     previous = pd.DataFrame()
-    comparison_caption = "select a year for YoY"
+    comparison_caption = ""
 
 # ============================================================
 # 8. KPI CALCULATIONS

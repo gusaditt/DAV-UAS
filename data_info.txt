@@ -1,0 +1,90 @@
+============================================================
+       KOPISERU DATASET EXPLORATION & SUMMARY STATISTICS
+============================================================
+
+1. METADATA RINGKAS
+------------------------------
+Nama Berkas      : coffe_shop_final.xlsx
+Ukuran Berkas    : 3.60 MB
+Jumlah Baris     : 28,748
+Jumlah Kolom     : 24
+
+2. DAFTAR KOLOM DAN TIPE DATA
+------------------------------
+  1. date                      : object          (Nulls: 0 / 0.00%)
+  2. branch_id                 : object          (Nulls: 0 / 0.00%)
+  3. branch_name               : object          (Nulls: 0 / 0.00%)
+  4. branch_city               : object          (Nulls: 0 / 0.00%)
+  5. branch_province           : object          (Nulls: 0 / 0.00%)
+  6. branch_type               : object          (Nulls: 0 / 0.00%)
+  7. open_year                 : int64           (Nulls: 0 / 0.00%)
+  8. total_transactions        : int64           (Nulls: 0 / 0.00%)
+  9. total_revenue             : int64           (Nulls: 0 / 0.00%)
+ 10. avg_ticket_size           : int64           (Nulls: 0 / 0.00%)
+ 11. total_cups_sold           : int64           (Nulls: 0 / 0.00%)
+ 12. top_selling_category      : object          (Nulls: 0 / 0.00%)
+ 13. dine_in_percent           : float64         (Nulls: 0 / 0.00%)
+ 14. delivery_percent          : float64         (Nulls: 0 / 0.00%)
+ 15. takeaway_percent          : float64         (Nulls: 0 / 0.00%)
+ 16. employee_on_duty          : int64           (Nulls: 0 / 0.00%)
+ 17. operating_cost            : int64           (Nulls: 0 / 0.00%)
+ 18. promo_active              : bool            (Nulls: 0 / 0.00%)
+ 19. promo_type                : object          (Nulls: 18,423 / 64.08%)
+ 20. weather                   : object          (Nulls: 0 / 0.00%)
+ 21. is_weekend                : bool            (Nulls: 0 / 0.00%)
+ 22. customer_satisfaction     : float64         (Nulls: 0 / 0.00%)
+ 23. total_distribusi          : float64         (Nulls: 0 / 0.00%)
+ 24. branch_region             : object          (Nulls: 0 / 0.00%)
+
+3. STATISTIK DESKRIPTIF (KOLOM NUMERIK)
+------------------------------
+                         count          mean           std        min        25%        50%        75%         max
+open_year              28748.0  2.020467e+03  1.298657e+00     2018.0     2020.0     2020.0     2021.0      2023.0
+total_transactions     28748.0  1.576762e+02  6.412942e+01       16.0      113.0      151.0      197.0       490.0
+total_revenue          28748.0  4.272860e+06  2.334216e+06   266000.0  2592000.0  3792000.0  5565250.0  17649000.0
+avg_ticket_size        28748.0  2.593468e+04  5.562164e+03    11000.0    22000.0    26000.0    30000.0     45000.0
+total_cups_sold        28748.0  1.953281e+02  7.828274e+01       21.0      140.0      188.0      243.0       655.0
+dine_in_percent        28748.0  2.410406e+01  1.061624e+01        0.4       15.5       25.1       32.5        54.2
+delivery_percent       28748.0  2.674344e+01  7.293916e+00        5.0       21.6       26.7       31.7        55.0
+takeaway_percent       28748.0  4.915250e+01  1.189578e+01       13.1       40.3       47.2       57.5        92.4
+employee_on_duty       28748.0  5.514888e+00  1.074771e+00        4.0        5.0        6.0        6.0         8.0
+operating_cost         28748.0  2.934790e+06  6.434491e+05  1630000.0  2416000.0  2782000.0  3484000.0   4673000.0
+customer_satisfaction  28748.0  3.843530e+00  3.059518e-01        2.5        3.6        3.8        4.0         5.0
+total_distribusi       28748.0  1.000000e+02  6.860588e-16      100.0      100.0      100.0      100.0       100.0
+
+4. DISTRIBUSI KATEGORI UTAMA
+------------------------------
+
+Kolom: branch_type
+  - Mall                      : 9,685 (33.69%)
+  - Standalone                : 9,394 (32.68%)
+  - University                : 5,788 (20.13%)
+  - Office Area               : 3,881 (13.50%)
+
+Kolom: promo_active
+  - False                     : 18,423 (64.08%)
+  - True                      : 10,325 (35.92%)
+
+Kolom: promo_type
+  - nan                       : 18,423 (64.08%)
+  - Happy Hour                : 2,309 (8.03%)
+  - Diskon 20%                : 2,181 (7.59%)
+  - Bundling Snack            : 2,022 (7.03%)
+  - Buy 1 Get 1               : 1,914 (6.66%)
+  - Cashback E-Wallet         : 1,899 (6.61%)
+
+Kolom: is_weekend
+  - False                     : 20,513 (71.35%)
+  - True                      : 8,235 (28.65%)
+
+Kolom: top_selling_category
+  - Kopi Susu                 : 9,433 (32.81%)
+  - Espresso Based            : 6,761 (23.52%)
+  - Non-Coffee                : 4,543 (15.80%)
+  - Tea                       : 4,203 (14.62%)
+  - Snack & Pastry            : 3,808 (13.25%)
+
+5. KESIMPULAN KUALITAS DATA
+------------------------------
+Total missing values (nulls) di seluruh dataset: 18,423
+Status: Perlu pembersihan data sebelum visualisasi.

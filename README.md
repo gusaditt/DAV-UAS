@@ -213,12 +213,4 @@ Tersebar di berbagai kota besar Indonesia:
 | **Makassar** | Losari, Panakkukang |
 | **Medan** | Sun Plaza, USU |
 
----
-
-## 📌 Catatan Akademis
-
-Proyek ini dibuat sebagai tugas **Ujian Akhir Semester (UAS)** mata kuliah **Data Analytics & Visualization (DAV)**, Semester 6.
-
----
-
 *Built with ☕ and Python*

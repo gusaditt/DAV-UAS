@@ -876,7 +876,7 @@ with mid_left:
     with st.container(border=True):
         st.markdown(
             '<div class="chart-title">Performance Overview</div>'
-            '<div class="chart-subtitle">Monthly trend for Revenue and Transactions<br>&nbsp;</div>',
+            '<div class="chart-subtitle">Monthly trend for Revenue and Operating Cost<br>&nbsp;</div>',
             unsafe_allow_html=True,
         )
 
@@ -884,13 +884,13 @@ with mid_left:
             filtered.groupby("month_period", as_index=False)
             .agg(
                 revenue=("total_revenue", "sum"),
-                transactions=("total_transactions", "sum"),
+                op_cost=("operating_cost", "sum"),
             )
             .sort_values("month_period")
         )
         monthly["date"] = monthly["month_period"].dt.to_timestamp()
 
-        fig_perf = make_subplots(specs=[[{"secondary_y": True}]])
+        fig_perf = go.Figure()
 
         fig_perf.add_trace(
             go.Scatter(
@@ -902,22 +902,20 @@ with mid_left:
                 marker=dict(size=4.5, color=BROWN_800),
                 fill="tozeroy",
                 fillcolor="rgba(78,52,46,0.045)",
-                hovertemplate="<b>%{x|%b %Y}</b><br>Revenue: Rp %{y:,.0f}<extra></extra>",
-            ),
-            secondary_y=False,
+                hovertemplate="Revenue: Rp %{y:,.0f}<extra></extra>",
+            )
         )
 
         fig_perf.add_trace(
             go.Scatter(
                 x=monthly["date"],
-                y=monthly["transactions"],
-                name="Transactions",
+                y=monthly["op_cost"],
+                name="Operating Cost (Rp)",
                 mode="lines+markers",
                 line=dict(color=BROWN_500, width=1.7, dash="dot"),
                 marker=dict(size=4.0, color=BROWN_500),
-                hovertemplate="<b>%{x|%b %Y}</b><br>Transactions: %{y:,.0f}<extra></extra>",
-            ),
-            secondary_y=True,
+                hovertemplate="Operating Cost: Rp %{y:,.0f}<extra></extra>",
+            )
         )
 
         solid_plot_layout(fig_perf, 160)
@@ -941,23 +939,16 @@ with mid_left:
             tickformat="%b\n%Y",
             tickfont=dict(size=8, color=BROWN_700),
             nticks=min(12, max(len(monthly), 2)),
+            fixedrange=True,
         )
         fig_perf.update_yaxes(
-            secondary_y=False,
             showgrid=True,
             gridcolor=GRID,
             zeroline=False,
             tickfont=dict(size=8),
             tickformat="~s",
             title_text="",
-        )
-        fig_perf.update_yaxes(
-            secondary_y=True,
-            showgrid=False,
-            zeroline=False,
-            tickfont=dict(size=8),
-            tickformat="~s",
-            title_text="",
+            fixedrange=True,
         )
 
         st.plotly_chart(
@@ -1016,7 +1007,7 @@ with mid_right:
             annotations=[
                 dict(
                     text=f"<b>{format_number(total_transactions)}</b><br><span style='font-size:8px'>Transactions</span>",
-                    x=0.37,
+                    x=0.50,
                     y=0.50,
                     showarrow=False,
                     align="center",

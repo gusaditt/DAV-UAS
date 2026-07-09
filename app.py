@@ -985,6 +985,7 @@ with mid_right:
                 values=channel_data["Transactions"],
                 hole=0.57,
                 sort=False,
+                domain=dict(x=[0, 0.75], y=[0.0, 0.85]),
                 marker=dict(colors=[BROWN_800, BROWN_500, "#E2C5A8"], line=dict(color=CARD_WHITE, width=1.2)),
                 textinfo="percent",
                 textposition="inside",
@@ -994,12 +995,12 @@ with mid_right:
         )
         solid_plot_layout(fig_channel, 160)
         fig_channel.update_layout(
-            margin=dict(l=2, r=2, t=28, b=4),
+            margin=dict(l=2, r=2, t=8, b=24),
             showlegend=True,
             legend=dict(
                 orientation="v",
                 yanchor="middle",
-                y=0.52,
+                y=0.42,
                 xanchor="left",
                 x=0.79,
                 font=dict(size=8.5, color=BROWN_700),
@@ -1007,8 +1008,8 @@ with mid_right:
             annotations=[
                 dict(
                     text=f"<b>{format_number(total_transactions)}</b><br><span style='font-size:8px'>Transactions</span>",
-                    x=0.50,
-                    y=0.50,
+                    x=0.375,
+                    y=0.42,
                     showarrow=False,
                     align="center",
                     font=dict(size=10, color=BROWN_900, family="Inter"),
@@ -1105,7 +1106,7 @@ with b2:
         solid_plot_layout(fig_cat, 150)
         max_cat = cat_rev["revenue"].max() if not cat_rev.empty else 1
         fig_cat.update_layout(
-            margin=dict(l=5, r=62, t=28, b=4),
+            margin=dict(l=5, r=62, t=10, b=18),
             showlegend=False,
             xaxis=dict(
                 showgrid=False,

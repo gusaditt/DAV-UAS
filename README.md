@@ -9,6 +9,14 @@
 
 ---
 
+## 👥 Anggota Kelompok
+1. **Arjuna Aditya Pratama** (2305551006)
+2. **Ida Bagus Gde Raditya Wedananta** (2305551102)
+3. **Made Aditya Nugraha Arya Putra** (2305551128)
+4. **I Made Tara Bujawan** (2305551139)
+
+---
+
 ## 📋 Deskripsi Proyek
 
 **KopiSeru Marketing Dashboard** adalah aplikasi web satu halaman (*one-screen dashboard*) yang dibangun menggunakan **Streamlit** untuk memvisualisasikan data pemasaran, transaksi, dan pendapatan jaringan kedai kopi KopiSeru secara interaktif dan real-time.
@@ -20,13 +28,12 @@ Dashboard ini dirancang untuk kebutuhan **analitik pemasaran** tingkat manajeria
 ## 🏗️ Struktur Proyek
 
 ```
-uas/
+DAV-UAS/
 │
 ├── app.py                      # Aplikasi utama Streamlit
 ├── coffe_shop_final.xlsx       # Dataset utama (28.748 baris, 24 kolom)
-├── explore_data.py             # Script eksplorasi & validasi data
-├── data_info.txt               # Output ringkasan info dataset
-├── dashboard_architecture.txt  # Dokumentasi arsitektur aplikasi
+├── requirements.txt            # Dependensi library Python
+├── .gitignore                  # Konfigurasi Git Ignore
 └── README.md                   # Dokumentasi proyek ini
 ```
 
@@ -39,7 +46,7 @@ uas/
 Pastikan Python `3.12+` sudah terpasang, kemudian install dependensi:
 
 ```bash
-pip install streamlit pandas numpy plotly openpyxl
+pip install -r requirements.txt
 ```
 
 ### 2. Jalankan Aplikasi

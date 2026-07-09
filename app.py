@@ -150,7 +150,7 @@ div[data-testid="element-container"]:has(.chart-title) div[data-testid="stMarkdo
     justify-content: center;
     min-height: 48px;
     padding: 0.05rem 0;
-    margin-top: 14px;
+    margin-top: 5px !important;
 }}
 
 .dashboard-title {{
@@ -455,7 +455,7 @@ p:empty {{ display: none !important; }}
 }}
 
 @media (max-height: 720px) {{
-    .dashboard-head {{ min-height: 34px; margin-top: 8px; }}
+    .dashboard-head {{ min-height: 34px; margin-top: 3px !important; }}
     div[data-testid="stHorizontalBlock"]:has(.kpi-card) {{
         min-height: 72px !important;
         height: 72px !important;

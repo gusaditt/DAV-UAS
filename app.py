@@ -1062,7 +1062,7 @@ with b1:
         fig_promo.update_layout(
             margin=dict(l=5, r=5, t=32, b=4),
             showlegend=False,
-            xaxis=dict(showgrid=False, showline=True, linecolor=BORDER, tickfont=dict(size=8.5)),
+            xaxis=dict(showgrid=False, showline=True, linecolor=BORDER, tickfont=dict(size=8.5), fixedrange=True),
             yaxis=dict(
                 showgrid=True,
                 gridcolor=GRID,
@@ -1070,6 +1070,7 @@ with b1:
                 tickformat="~s",
                 tickfont=dict(size=8),
                 range=[0, max_promo * 1.25],
+                fixedrange=True,
             ),
         )
         st.plotly_chart(fig_promo, use_container_width=True, config={"displayModeBar": False})
@@ -1111,8 +1112,9 @@ with b2:
                 showticklabels=False,
                 zeroline=False,
                 range=[0, max_cat * 1.28],
+                fixedrange=True,
             ),
-            yaxis=dict(showgrid=False, tickfont=dict(size=7.7, color=BROWN_700)),
+            yaxis=dict(showgrid=False, tickfont=dict(size=7.7, color=BROWN_700), fixedrange=True),
         )
         st.plotly_chart(fig_cat, use_container_width=True, config={"displayModeBar": False})
 
@@ -1199,8 +1201,8 @@ with b3:
                 x=0.0,
                 font=dict(size=7.8),
             ),
-            xaxis=dict(showgrid=False, tickfont=dict(size=7.4), showline=True, linecolor=BORDER),
-            yaxis=dict(showgrid=True, gridcolor=GRID, showticklabels=False, zeroline=False, range=[0, 122]),
+            xaxis=dict(showgrid=False, tickfont=dict(size=7.4), showline=True, linecolor=BORDER, fixedrange=True),
+            yaxis=dict(showgrid=True, gridcolor=GRID, showticklabels=False, zeroline=False, range=[0, 122], fixedrange=True),
         )
         st.plotly_chart(fig_ww, use_container_width=True, config={"displayModeBar": False})
 

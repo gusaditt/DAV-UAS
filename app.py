@@ -66,6 +66,18 @@ st.markdown(
 [data-testid="stSidebar"],
 [data-testid="collapsedControl"] {{ display: none !important; }}
 
+/* ---------- Hide all scrollbars globally (Chrome/Safari/Edge/Firefox) ---------- */
+::-webkit-scrollbar {{
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+}}
+
+* {{
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+}}
+
 /* ---------- Hard no-scroll viewport ---------- */
 html, body {{
     width: 100% !important;
@@ -100,14 +112,35 @@ html, body {{
     overflow: hidden !important;
 }}
 
-/* Streamlit layout spacing */
-[data-testid="stVerticalBlock"] {{
+/* Streamlit layout spacing and overlap prevention */
+[data-testid="stVerticalBlock"],
+.stVerticalBlock {{
     gap: 0.42rem !important;
 }}
 
-div[data-testid="stHorizontalBlock"] {{
+/* Force all layout and element containers to never shrink vertically, preventing overlaps */
+[data-testid="stVerticalBlock"] > div,
+.stVerticalBlock > div,
+div[data-testid="element-container"],
+.element-container,
+div[data-testid="stHorizontalBlock"],
+.stHorizontalBlock {{
+    flex-shrink: 0 !important;
+}}
+
+div[data-testid="stHorizontalBlock"],
+.stHorizontalBlock {{
     gap: 0.62rem !important;
     align-items: stretch !important;
+}}
+
+/* Force chart header containers to never shrink and collapse, preventing Plotly overlap */
+div[data-testid="element-container"]:has(.chart-title),
+div[data-testid="element-container"]:has(.chart-title) > div,
+div[data-testid="element-container"]:has(.chart-title) div[data-testid="stMarkdownContainer"] {{
+    min-height: max-content !important;
+    height: auto !important;
+    flex-shrink: 0 !important;
 }}
 
 /* ---------- Header ---------- */
@@ -117,6 +150,7 @@ div[data-testid="stHorizontalBlock"] {{
     justify-content: center;
     min-height: 48px;
     padding: 0.05rem 0;
+    margin-top: 14px;
 }}
 
 .dashboard-title {{
@@ -144,30 +178,47 @@ div[data-testid="stSelectbox"] {{
     margin: 0 !important;
 }}
 
+div[data-testid="stSelectbox"] {{
+    margin-top: -3px !important;
+    margin-bottom: -3px !important;
+}}
+
 div[data-testid="stSelectbox"] label {{
-    margin: 0 0 2px 0 !important;
+    margin: 0 0 1px 0 !important;
     padding: 0 !important;
+    display: flex !important;
+    justify-content: center !important;
+    width: 100% !important;
 }}
 
 div[data-testid="stSelectbox"] label p {{
     color: var(--brown-500) !important;
-    font-size: 0.54rem !important;
+    font-size: 0.62rem !important;
     line-height: 1 !important;
-    font-weight: 700 !important;
+    font-weight: 800 !important;
     letter-spacing: 0.30px !important;
     text-transform: uppercase !important;
     white-space: nowrap !important;
+    text-align: center !important;
 }}
 
 div[data-baseweb="select"] > div {{
-    min-height: 32px !important;
-    height: 32px !important;
+    min-height: 30px !important;
+    height: 30px !important;
     background: #FFFFFF !important;
     border: 1px solid var(--border) !important;
     border-radius: 9px !important;
     box-shadow: 0 1px 3px rgba(62,39,35,0.035) !important;
     padding-left: 0.08rem !important;
     overflow: hidden !important;
+}}
+
+div[data-baseweb="select"] > div > div {{
+    padding-top: 5px !important;
+    padding-bottom: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    height: 100% !important;
 }}
 
 div[data-baseweb="select"] span,
@@ -179,7 +230,7 @@ div[data-baseweb="select"] div {{
 div[data-baseweb="select"] span {{
     color: var(--brown-900) !important;
     font-size: 0.66rem !important;
-    line-height: 1.05 !important;
+    line-height: 1.2 !important;
     font-weight: 500 !important;
     white-space: nowrap !important;
     overflow: hidden !important;
@@ -191,6 +242,12 @@ ul[role="listbox"] {{
 }}
 
 /* ---------- KPI cards ---------- */
+div[data-testid="stHorizontalBlock"]:has(.kpi-card) {{
+    min-height: 90px !important;
+    height: 90px !important;
+    margin-bottom: 0.15rem !important;
+}}
+
 .kpi-card {{
     height: 78px;
     min-height: 78px;
@@ -286,7 +343,6 @@ ul[role="listbox"] {{
     border-radius: 6px;
     white-space: nowrap;
 }}
-
 .kpi-caption {{
     color: #A1887F;
     font-size: 0.51rem;
@@ -313,6 +369,29 @@ div[data-testid="stVerticalBlockBorderWrapper"] > div,
 div[data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlock"] {{
     background: #FFFFFF !important;
     background-color: #FFFFFF !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+}}
+
+/* Ensure the elements inside vertical block use flex stretch */
+div[data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlock"] > div {{
+    flex-shrink: 0 !important;
+}}
+
+div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="element-container"]:has(.chart-title) {{
+    flex: 0 0 auto !important;
+}}
+
+div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="element-container"]:has(.stPlotlyChart),
+div[data-testid="stVerticalBlockBorderWrapper"] .stPlotlyChart,
+div[data-testid="stVerticalBlockBorderWrapper"] .stPlotlyChart > div,
+div[data-testid="stVerticalBlockBorderWrapper"] iframe {{
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    max-height: 100% !important;
 }}
 
 .chart-title {{
@@ -330,16 +409,18 @@ div[data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlock"] 
     font-size: 0.54rem;
     line-height: 1.10;
     margin-top: 2px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    margin-bottom: 0.38rem;
+}}
+
+.stPlotlyChart {{
+    margin-top: 0.55rem !important;
 }}
 
 .stPlotlyChart,
 .stPlotlyChart > div {{
     background: #FFFFFF !important;
     border-radius: 7px;
-    overflow: hidden;
+    overflow: hidden !important;
 }}
 
 /* Prevent accidental extra spacing from empty paragraphs */
@@ -356,19 +437,36 @@ p:empty {{ display: none !important; }}
     .dashboard-head {{ min-height: 42px; }}
     .dashboard-title {{ font-size: 1.16rem; }}
     .dashboard-subtitle {{ font-size: 0.57rem; }}
+    div[data-testid="stHorizontalBlock"]:has(.kpi-card) {{
+        min-height: 78px !important;
+        height: 78px !important;
+        margin-bottom: 0.10rem !important;
+    }}
     .kpi-card {{ height: 68px; min-height: 68px; padding: 0.42rem 0.58rem; }}
     .kpi-icon-wrap {{ width: 36px; height: 36px; flex-basis: 36px; font-size: 0.95rem; }}
     .kpi-value {{ font-size: 0.98rem; }}
     .kpi-label {{ font-size: 0.52rem; }}
     .chart-title {{ font-size: 0.68rem; }}
-    .chart-subtitle {{ font-size: 0.50rem; }}
+    .chart-subtitle {{ font-size: 0.50rem; margin-bottom: 0.24rem; }}
+    .stPlotlyChart {{ margin-top: 0.40rem !important; }}
+    div[data-testid="stVerticalBlockBorderWrapper"] {{
+        padding: 0.30rem 0.45rem 0.15rem 0.45rem !important;
+    }}
 }}
 
 @media (max-height: 720px) {{
-    .dashboard-subtitle {{ display: none; }}
-    .dashboard-head {{ min-height: 34px; }}
+    .dashboard-head {{ min-height: 34px; margin-top: 8px; }}
+    div[data-testid="stHorizontalBlock"]:has(.kpi-card) {{
+        min-height: 68px !important;
+        height: 68px !important;
+        margin-bottom: 0.05rem !important;
+    }}
     .kpi-card {{ height: 60px; min-height: 60px; }}
     .kpi-caption {{ display: none; }}
+    .stPlotlyChart {{ margin-top: 0.30rem !important; }}
+    div[data-testid="stVerticalBlockBorderWrapper"] {{
+        padding: 0.20rem 0.35rem 0.10rem 0.35rem !important;
+    }}
 }}
 </style>
 """,
@@ -565,29 +663,120 @@ with header_col:
     st.markdown(
         """
         <div class="dashboard-head">
-            <div class="dashboard-title">☕ KopiSeru Marketing Dashboard</div>
+            <div class="dashboard-title">KopiSeru Marketing Dashboard</div>
             <div class="dashboard-subtitle">Revenue, customer activity, channel mix and actionable marketing performance</div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-all_years = sorted(df["year"].dropna().unique().astype(int).tolist())
-all_branches = sorted(df["branch_name"].dropna().astype(str).unique().tolist())
-all_cities = sorted(df["branch_city"].dropna().astype(str).unique().tolist())
-all_types = sorted(df["branch_type"].dropna().astype(str).unique().tolist())
-all_promos = sorted([p for p in df["promo_type"].dropna().astype(str).unique().tolist() if p != "No Promo"])
+# Initialize session state for filters
+if "selected_year" not in st.session_state:
+    st.session_state.selected_year = "All Years"
+if "selected_branch" not in st.session_state:
+    st.session_state.selected_branch = "All Branches"
+if "selected_city" not in st.session_state:
+    st.session_state.selected_city = "All Cities"
+if "selected_type" not in st.session_state:
+    st.session_state.selected_type = "All Types"
+if "selected_promo" not in st.session_state:
+    st.session_state.selected_promo = "All Promos"
+
+# Auto-set City and Branch Type if a specific branch is selected
+if st.session_state.selected_branch != "All Branches":
+    branch_rows = df[df["branch_name"] == st.session_state.selected_branch]
+    if not branch_rows.empty:
+        st.session_state.selected_city = branch_rows["branch_city"].iloc[0]
+        st.session_state.selected_type = branch_rows["branch_type"].iloc[0]
+
+# Compute options dynamically based on all OTHER active selections
+# 1. Year options
+df_year = df.copy()
+if st.session_state.selected_branch != "All Branches":
+    df_year = df_year[df_year["branch_name"] == st.session_state.selected_branch]
+if st.session_state.selected_city != "All Cities":
+    df_year = df_year[df_year["branch_city"] == st.session_state.selected_city]
+if st.session_state.selected_type != "All Types":
+    df_year = df_year[df_year["branch_type"] == st.session_state.selected_type]
+if st.session_state.selected_promo != "All Promos":
+    df_year = df_year[df_year["promo_type"] == st.session_state.selected_promo]
+available_years = sorted(df_year["year"].dropna().unique().astype(int).tolist())
+year_options = ["All Years"] + [str(y) for y in available_years]
+
+# 2. Branch options
+df_branch = df.copy()
+if st.session_state.selected_year != "All Years":
+    df_branch = df_branch[df_branch["year"] == int(st.session_state.selected_year)]
+if st.session_state.selected_city != "All Cities":
+    df_branch = df_branch[df_branch["branch_city"] == st.session_state.selected_city]
+if st.session_state.selected_type != "All Types":
+    df_branch = df_branch[df_branch["branch_type"] == st.session_state.selected_type]
+if st.session_state.selected_promo != "All Promos":
+    df_branch = df_branch[df_branch["promo_type"] == st.session_state.selected_promo]
+available_branches = sorted(df_branch["branch_name"].dropna().astype(str).unique().tolist())
+branch_options = ["All Branches"] + available_branches
+
+# 3. City options
+df_city = df.copy()
+if st.session_state.selected_year != "All Years":
+    df_city = df_city[df_city["year"] == int(st.session_state.selected_year)]
+if st.session_state.selected_branch != "All Branches":
+    df_city = df_city[df_city["branch_name"] == st.session_state.selected_branch]
+if st.session_state.selected_type != "All Types":
+    df_city = df_city[df_city["branch_type"] == st.session_state.selected_type]
+if st.session_state.selected_promo != "All Promos":
+    df_city = df_city[df_city["promo_type"] == st.session_state.selected_promo]
+available_cities = sorted(df_city["branch_city"].dropna().astype(str).unique().tolist())
+city_options = ["All Cities"] + available_cities
+
+# 4. Branch Type options
+df_type = df.copy()
+if st.session_state.selected_year != "All Years":
+    df_type = df_type[df_type["year"] == int(st.session_state.selected_year)]
+if st.session_state.selected_branch != "All Branches":
+    df_type = df_type[df_type["branch_name"] == st.session_state.selected_branch]
+if st.session_state.selected_city != "All Cities":
+    df_type = df_type[df_type["branch_city"] == st.session_state.selected_city]
+if st.session_state.selected_promo != "All Promos":
+    df_type = df_type[df_type["promo_type"] == st.session_state.selected_promo]
+available_types = sorted(df_type["branch_type"].dropna().astype(str).unique().tolist())
+type_options = ["All Types"] + available_types
+
+# 5. Promo Type options
+df_promo = df.copy()
+if st.session_state.selected_year != "All Years":
+    df_promo = df_promo[df_promo["year"] == int(st.session_state.selected_year)]
+if st.session_state.selected_branch != "All Branches":
+    df_promo = df_promo[df_promo["branch_name"] == st.session_state.selected_branch]
+if st.session_state.selected_city != "All Cities":
+    df_promo = df_promo[df_promo["branch_city"] == st.session_state.selected_city]
+if st.session_state.selected_type != "All Types":
+    df_promo = df_promo[df_promo["branch_type"] == st.session_state.selected_type]
+available_promos = sorted([p for p in df_promo["promo_type"].dropna().astype(str).unique().tolist() if p != "No Promo"])
+promo_options = ["All Promos"] + available_promos
+
+# Validate selections against available options (reset to "All ..." if invalid)
+if st.session_state.selected_year not in year_options:
+    st.session_state.selected_year = "All Years"
+if st.session_state.selected_branch not in branch_options:
+    st.session_state.selected_branch = "All Branches"
+if st.session_state.selected_city not in city_options:
+    st.session_state.selected_city = "All Cities"
+if st.session_state.selected_type not in type_options:
+    st.session_state.selected_type = "All Types"
+if st.session_state.selected_promo not in promo_options:
+    st.session_state.selected_promo = "All Promos"
 
 with fy_col:
-    selected_year = st.selectbox("Year", ["All Years"] + [str(y) for y in all_years], index=0)
+    selected_year = st.selectbox("Year", options=year_options, key="selected_year")
 with branch_col:
-    selected_branch = st.selectbox("Branch", ["All Branches"] + all_branches, index=0)
+    selected_branch = st.selectbox("Branch", options=branch_options, key="selected_branch")
 with city_col:
-    selected_city = st.selectbox("City", ["All Cities"] + all_cities, index=0)
+    selected_city = st.selectbox("City", options=city_options, key="selected_city")
 with type_col:
-    selected_type = st.selectbox("Branch Type", ["All Types"] + all_types, index=0)
+    selected_type = st.selectbox("Branch Type", options=type_options, key="selected_type")
 with promo_col:
-    selected_promo = st.selectbox("Promo Type", ["All Promos"] + all_promos, index=0)
+    selected_promo = st.selectbox("Promo Type", options=promo_options, key="selected_promo")
 
 # ============================================================
 # 7. APPLY FILTERS
@@ -687,7 +876,7 @@ with mid_left:
     with st.container(border=True):
         st.markdown(
             '<div class="chart-title">Performance Overview</div>'
-            '<div class="chart-subtitle">Monthly trend for Revenue and Transactions</div>',
+            '<div class="chart-subtitle">Monthly trend for Revenue and Transactions<br>&nbsp;</div>',
             unsafe_allow_html=True,
         )
 
@@ -731,9 +920,9 @@ with mid_left:
             secondary_y=True,
         )
 
-        solid_plot_layout(fig_perf, 205)
+        solid_plot_layout(fig_perf, 160)
         fig_perf.update_layout(
-            margin=dict(l=8, r=8, t=12, b=8),
+            margin=dict(l=8, r=8, t=32, b=8),
             legend=dict(
                 orientation="h",
                 yanchor="bottom",
@@ -782,7 +971,7 @@ with mid_right:
     with st.container(border=True):
         st.markdown(
             '<div class="chart-title">Customer Channel Mix</div>'
-            '<div class="chart-subtitle">Estimated share of transactions by customer channel</div>',
+            '<div class="chart-subtitle">Estimated share of transactions by customer channel<br>&nbsp;</div>',
             unsafe_allow_html=True,
         )
 
@@ -812,9 +1001,9 @@ with mid_right:
                 hovertemplate="<b>%{label}</b><br>Estimated transactions: %{value:,.0f}<br>Share: %{percent}<extra></extra>",
             )
         )
-        solid_plot_layout(fig_channel, 205)
+        solid_plot_layout(fig_channel, 160)
         fig_channel.update_layout(
-            margin=dict(l=2, r=2, t=8, b=4),
+            margin=dict(l=2, r=2, t=28, b=4),
             showlegend=True,
             legend=dict(
                 orientation="v",
@@ -852,7 +1041,7 @@ with b1:
     with st.container(border=True):
         st.markdown(
             '<div class="chart-title">Promo vs Non Promo</div>'
-            '<div class="chart-subtitle">Average revenue per branch-day</div>',
+            '<div class="chart-subtitle">Average revenue per branch-day<br>&nbsp;</div>',
             unsafe_allow_html=True,
         )
 
@@ -877,10 +1066,10 @@ with b1:
                 hovertemplate="<b>%{x}</b><br>Avg revenue / branch-day: Rp %{y:,.0f}<extra></extra>",
             )
         )
-        solid_plot_layout(fig_promo, 200)
+        solid_plot_layout(fig_promo, 150)
         max_promo = promo_perf["avg_revenue"].max() if not promo_perf.empty else 1
         fig_promo.update_layout(
-            margin=dict(l=5, r=5, t=12, b=4),
+            margin=dict(l=5, r=5, t=32, b=4),
             showlegend=False,
             xaxis=dict(showgrid=False, showline=True, linecolor=BORDER, tickfont=dict(size=8.5)),
             yaxis=dict(
@@ -899,7 +1088,7 @@ with b2:
     with st.container(border=True):
         st.markdown(
             '<div class="chart-title">Top Category Performance</div>'
-            '<div class="chart-subtitle">Revenue when each category is recorded as the leading category</div>',
+            '<div class="chart-subtitle">Revenue when each category is recorded as the leading category<br>&nbsp;</div>',
             unsafe_allow_html=True,
         )
 
@@ -921,10 +1110,10 @@ with b2:
                 hovertemplate="<b>%{y}</b><br>Associated revenue: Rp %{x:,.0f}<extra></extra>",
             )
         )
-        solid_plot_layout(fig_cat, 200)
+        solid_plot_layout(fig_cat, 150)
         max_cat = cat_rev["revenue"].max() if not cat_rev.empty else 1
         fig_cat.update_layout(
-            margin=dict(l=5, r=62, t=8, b=4),
+            margin=dict(l=5, r=62, t=28, b=4),
             showlegend=False,
             xaxis=dict(
                 showgrid=False,
@@ -941,7 +1130,7 @@ with b3:
     with st.container(border=True):
         st.markdown(
             '<div class="chart-title">Weekday vs Weekend Performance</div>'
-            '<div class="chart-subtitle">Comparison of revenue, transactions and weighted ticket size</div>',
+            '<div class="chart-subtitle">Comparison of revenue, transactions and weighted ticket size<br>&nbsp;</div>',
             unsafe_allow_html=True,
         )
 
@@ -1007,10 +1196,10 @@ with b3:
                 hovertemplate="<b>Weekend · %{x}</b><br>Actual value: %{text}<extra></extra>",
             )
         )
-        solid_plot_layout(fig_ww, 200)
+        solid_plot_layout(fig_ww, 150)
         fig_ww.update_layout(
             barmode="group",
-            margin=dict(l=4, r=4, t=12, b=4),
+            margin=dict(l=4, r=4, t=32, b=4),
             legend=dict(
                 orientation="h",
                 yanchor="bottom",

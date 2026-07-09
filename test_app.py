@@ -1,6 +1,5 @@
 import unittest
 import pandas as pd
-import numpy as np
 from app import format_rupiah, format_number, calc_delta, weighted_ticket
 
 class TestDashboardHelpers(unittest.TestCase):

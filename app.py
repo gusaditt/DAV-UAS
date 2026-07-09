@@ -7,9 +7,7 @@ import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots
 
-# ============================================================
-# 1. PAGE CONFIG
-# ============================================================
+# 1. Page Configuration
 st.set_page_config(
     page_title="KopiSeru Marketing Dashboard",
     page_icon="☕",
@@ -17,10 +15,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# ============================================================
-# 2. DESIGN TOKENS
-#    Dominant palette: brown + cream. Green/red only for deltas.
-# ============================================================
+# 2. Design Tokens (Brown & Cream Palette)
 BROWN_900 = "#3E2723"
 BROWN_800 = "#4A2C22"
 BROWN_700 = "#5D4037"
@@ -39,10 +34,7 @@ GREEN_BG = "#E8F5E9"
 RED = "#C62828"
 RED_BG = "#FFEBEE"
 
-# ============================================================
-# 3. GLOBAL CSS
-#    Goal: one-screen dashboard, no vertical scroll, white cards.
-# ============================================================
+# 3. Global CSS (One-screen responsive dashboard styling)
 st.markdown(
     f"""
 <style>
@@ -61,12 +53,12 @@ st.markdown(
     --red-bg: {RED_BG};
 }}
 
-/* ---------- Hide Streamlit chrome ---------- */
+/* Hide Streamlit elements */
 #MainMenu, footer, header {{ visibility: hidden !important; }}
 [data-testid="stSidebar"],
 [data-testid="collapsedControl"] {{ display: none !important; }}
 
-/* ---------- Hide all scrollbars globally (Chrome/Safari/Edge/Firefox) ---------- */
+/* Hide scrollbars */
 ::-webkit-scrollbar {{
     display: none !important;
     width: 0 !important;
@@ -78,7 +70,7 @@ st.markdown(
     -ms-overflow-style: none !important;
 }}
 
-/* ---------- Hard no-scroll viewport ---------- */
+/* Layout & viewport constraints for one-screen view */
 html, body {{
     width: 100% !important;
     height: 100% !important;
@@ -112,13 +104,11 @@ html, body {{
     overflow: hidden !important;
 }}
 
-/* Streamlit layout spacing and overlap prevention */
 [data-testid="stVerticalBlock"],
 .stVerticalBlock {{
     gap: 0.42rem !important;
 }}
 
-/* Force all layout and element containers to never shrink vertically, preventing overlaps */
 [data-testid="stVerticalBlock"] > div,
 .stVerticalBlock > div,
 div[data-testid="element-container"],
@@ -134,7 +124,6 @@ div[data-testid="stHorizontalBlock"],
     align-items: stretch !important;
 }}
 
-/* Force chart header containers to never shrink and collapse, preventing Plotly overlap */
 div[data-testid="element-container"]:has(.chart-title),
 div[data-testid="element-container"]:has(.chart-title) > div,
 div[data-testid="element-container"]:has(.chart-title) div[data-testid="stMarkdownContainer"] {{
@@ -143,7 +132,7 @@ div[data-testid="element-container"]:has(.chart-title) div[data-testid="stMarkdo
     flex-shrink: 0 !important;
 }}
 
-/* ---------- Header ---------- */
+/* Header styling */
 .dashboard-head {{
     display: flex;
     flex-direction: column;
@@ -173,12 +162,9 @@ div[data-testid="element-container"]:has(.chart-title) div[data-testid="stMarkdo
     text-overflow: ellipsis;
 }}
 
-/* ---------- Selectboxes / filter cards ---------- */
+/* Filters styling */
 div[data-testid="stSelectbox"] {{
     margin: 0 !important;
-}}
-
-div[data-testid="stSelectbox"] {{
     margin-top: -3px !important;
     margin-bottom: 4px !important;
 }}
@@ -241,7 +227,7 @@ ul[role="listbox"] {{
     font-size: 0.68rem !important;
 }}
 
-/* ---------- KPI cards ---------- */
+/* KPI Cards styling */
 div[data-testid="stHorizontalBlock"]:has(.kpi-card) {{
     min-height: 90px !important;
     height: 90px !important;
@@ -343,6 +329,7 @@ div[data-testid="stHorizontalBlock"]:has(.kpi-card) {{
     border-radius: 6px;
     white-space: nowrap;
 }}
+
 .kpi-caption {{
     color: #A1887F;
     font-size: 0.51rem;
@@ -353,7 +340,7 @@ div[data-testid="stHorizontalBlock"]:has(.kpi-card) {{
     text-overflow: ellipsis;
 }}
 
-/* ---------- Solid white chart cards ---------- */
+/* White container cards for charts */
 div[data-testid="stVerticalBlockBorderWrapper"] {{
     background: #FFFFFF !important;
     background-color: #FFFFFF !important;
@@ -375,7 +362,6 @@ div[data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlock"] 
     height: 100% !important;
 }}
 
-/* Ensure the elements inside vertical block use flex stretch */
 div[data-testid="stVerticalBlockBorderWrapper"] [data-testid="stVerticalBlock"] > div {{
     flex-shrink: 0 !important;
 }}
@@ -423,10 +409,9 @@ div[data-testid="stVerticalBlockBorderWrapper"] iframe {{
     overflow: hidden !important;
 }}
 
-/* Prevent accidental extra spacing from empty paragraphs */
 p:empty {{ display: none !important; }}
 
-/* ---------- Responsive compression for short laptop screens ---------- */
+/* Responsive layouts for small laptops and screens */
 @media (max-height: 850px) {{
     .block-container {{
         padding-top: 0.35rem !important;
@@ -473,9 +458,7 @@ p:empty {{ display: none !important; }}
     unsafe_allow_html=True,
 )
 
-# ============================================================
-# 4. DATA LOADING
-# ============================================================
+# 4. Data Loading
 DEFAULT_DATA_PATHS = [
     "coffee_shop_data_cleaned_final (7) (1).xlsx",
     "coffe_shop_final.xlsx",
@@ -484,7 +467,7 @@ DEFAULT_DATA_PATHS = [
 
 
 def resolve_excel_path() -> Path:
-    """Resolve the Excel source without hard-failing on one filename."""
+    """Resolve local Excel dataset path."""
     env_path = os.getenv("KOPISERU_DATA_PATH")
     candidates = []
     if env_path:
@@ -495,7 +478,6 @@ def resolve_excel_path() -> Path:
         if candidate.exists():
             return candidate
 
-    # Last fallback: first xlsx in current folder
     xlsx_files = sorted(Path(".").glob("*.xlsx"))
     if xlsx_files:
         return xlsx_files[0]
@@ -508,6 +490,7 @@ def resolve_excel_path() -> Path:
 
 @st.cache_data(show_spinner=False)
 def load_data(path_str: str) -> pd.DataFrame:
+    """Load and process Excel dataset."""
     data = pd.read_excel(path_str)
 
     required_cols = {
@@ -535,7 +518,7 @@ def load_data(path_str: str) -> pd.DataFrame:
     data["date"] = pd.to_datetime(data["date"], errors="coerce")
     data = data.dropna(subset=["date"])
 
-    # Standardized helper dimensions
+    # Feature engineering for dashboard options
     data["year"] = data["date"].dt.year.astype(int)
     data["month_period"] = data["date"].dt.to_period("M")
     data["month_label"] = data["date"].dt.strftime("%b %Y")
@@ -544,7 +527,7 @@ def load_data(path_str: str) -> pd.DataFrame:
     data["day_type"] = np.where(data["is_weekend"].fillna(False).astype(bool), "Weekend", "Weekday")
     data["promo_type"] = data["promo_type"].fillna("No Promo")
 
-    # Numeric safety
+    # Handle numeric columns safely
     numeric_cols = [
         "total_transactions",
         "total_revenue",
@@ -567,10 +550,10 @@ except Exception as exc:
     st.error(f"Gagal memuat dataset: {exc}")
     st.stop()
 
-# ============================================================
-# 5. FORMAT & ANALYTIC HELPERS
-# ============================================================
+
+# 5. Format & Analytic Helpers
 def format_rupiah(value: float) -> str:
+    """Format numeric values as Rupiah currency string."""
     value = float(value or 0)
     abs_v = abs(value)
     sign = "-" if value < 0 else ""
@@ -586,6 +569,7 @@ def format_rupiah(value: float) -> str:
 
 
 def format_number(value: float) -> str:
+    """Format large numbers with suffix (K, M, B)."""
     value = float(value or 0)
     abs_v = abs(value)
     sign = "-" if value < 0 else ""
@@ -599,12 +583,14 @@ def format_number(value: float) -> str:
 
 
 def calc_delta(current: float, previous: float | None) -> float | None:
+    """Calculate percentage change from previous value."""
     if previous is None or pd.isna(previous) or previous == 0:
         return None
     return ((current - previous) / previous) * 100
 
 
 def weighted_ticket(data: pd.DataFrame) -> float:
+    """Calculate weighted ticket size."""
     transactions = data["total_transactions"].sum()
     if transactions == 0:
         return 0.0
@@ -612,6 +598,7 @@ def weighted_ticket(data: pd.DataFrame) -> float:
 
 
 def html_kpi(icon: str, label: str, value: str, delta: float | None, caption: str) -> str:
+    """Generate HTML snippet for KPI card components."""
     if delta is None:
         delta_html = '<span class="kpi-delta-neutral">—</span>'
     elif delta >= 0:
@@ -635,7 +622,7 @@ def html_kpi(icon: str, label: str, value: str, delta: float | None, caption: st
 
 
 def solid_plot_layout(fig: go.Figure, height: int) -> go.Figure:
-    """Apply consistent white-card Plotly styling."""
+    """Apply consistent styling configuration to Plotly graphs."""
     fig.update_layout(
         height=height,
         margin=dict(l=8, r=8, t=8, b=8),
@@ -651,10 +638,7 @@ def solid_plot_layout(fig: go.Figure, height: int) -> go.Figure:
     return fig
 
 
-# ============================================================
-# 6. HEADER + FILTERS
-#    No search bar. Compact labels to avoid clipping.
-# ============================================================
+# 6. Header & Filters Layout
 header_col, fy_col, branch_col, city_col, type_col, promo_col = st.columns(
     [4.2, 1.15, 1.45, 1.25, 1.40, 1.45]
 )
@@ -670,7 +654,7 @@ with header_col:
         unsafe_allow_html=True,
     )
 
-# Initialize session state for filters
+# Setup filter session state
 if "selected_year" not in st.session_state:
     st.session_state.selected_year = "All Years"
 if "selected_branch" not in st.session_state:
@@ -682,14 +666,13 @@ if "selected_type" not in st.session_state:
 if "selected_promo" not in st.session_state:
     st.session_state.selected_promo = "All Promos"
 
-# Auto-set City and Branch Type if a specific branch is selected
+# Synchronize City & Branch Type filters if a branch is chosen
 if st.session_state.selected_branch != "All Branches":
     branch_rows = df[df["branch_name"] == st.session_state.selected_branch]
     if not branch_rows.empty:
         st.session_state.selected_city = branch_rows["branch_city"].iloc[0]
         st.session_state.selected_type = branch_rows["branch_type"].iloc[0]
 
-# Compute options dynamically based on all OTHER active selections
 # 1. Year options
 df_year = df.copy()
 if st.session_state.selected_branch != "All Branches":
@@ -755,7 +738,7 @@ if st.session_state.selected_type != "All Types":
 available_promos = sorted([p for p in df_promo["promo_type"].dropna().astype(str).unique().tolist() if p != "No Promo"])
 promo_options = ["All Promos"] + available_promos
 
-# Validate selections against available options (reset to "All ..." if invalid)
+# Fallback validator for filter states
 if st.session_state.selected_year not in year_options:
     st.session_state.selected_year = "All Years"
 if st.session_state.selected_branch not in branch_options:
@@ -778,9 +761,8 @@ with type_col:
 with promo_col:
     selected_promo = st.selectbox("Promo Type", options=promo_options, key="selected_promo")
 
-# ============================================================
-# 7. APPLY FILTERS
-# ============================================================
+
+# 7. Apply Filter Selections
 filtered = df.copy()
 
 if selected_year != "All Years":
@@ -798,7 +780,7 @@ if filtered.empty:
     st.warning("Tidak ada data untuk kombinasi filter yang dipilih.")
     st.stop()
 
-# Previous year comparison, preserving non-year filters.
+# Prepare previous year data comparison
 if selected_year != "All Years":
     previous = df[df["year"] == int(selected_year) - 1].copy()
     if selected_branch != "All Branches":
@@ -814,9 +796,8 @@ else:
     previous = pd.DataFrame()
     comparison_caption = ""
 
-# ============================================================
-# 8. KPI CALCULATIONS
-# ============================================================
+
+# 8. KPI Metric Calculations
 total_revenue = filtered["total_revenue"].sum()
 total_transactions = filtered["total_transactions"].sum()
 total_cups = filtered["total_cups_sold"].sum()
@@ -838,9 +819,8 @@ else:
     delta_cups = None
     delta_ticket = None
 
-# ============================================================
-# 9. PART 1 — KPI CARDS
-# ============================================================
+
+# 9. KPI Cards Layout
 k1, k2, k3, k4 = st.columns(4)
 
 with k1:
@@ -864,14 +844,11 @@ with k4:
         unsafe_allow_html=True,
     )
 
-# ============================================================
-# 10. PART 2 — MIDDLE ROW
-#     A. Monthly Performance Overview
-#     B. Customer Channel Mix
-# ============================================================
+
+# 10. Middle Row Components
 mid_left, mid_right = st.columns([5.1, 3.0])
 
-# ---------- A. Performance Overview ----------
+# Performance Overview Trend Chart
 with mid_left:
     with st.container(border=True):
         st.markdown(
@@ -957,7 +934,7 @@ with mid_left:
             config={"displayModeBar": False, "responsive": True},
         )
 
-# ---------- B. Customer Channel Mix ----------
+# Customer Channel Mix Donut Chart
 with mid_right:
     with st.container(border=True):
         st.markdown(
@@ -966,8 +943,6 @@ with mid_right:
             unsafe_allow_html=True,
         )
 
-        # More valid than "revenue by channel": estimate transaction counts
-        # because dataset contains channel percentages, not actual channel revenue.
         channel_data = pd.DataFrame(
             {
                 "Channel": ["Takeaway", "Dine-In", "Delivery"],
@@ -1023,12 +998,11 @@ with mid_right:
             config={"displayModeBar": False, "responsive": True},
         )
 
-# ============================================================
-# 11. PART 3 — BOTTOM ROW, THREE ACTIONABLE MARKETING CHARTS
-# ============================================================
+
+# 11. Bottom Row Components
 b1, b2, b3 = st.columns(3)
 
-# ---------- A. Promo vs Non Promo ----------
+# Promo vs Non-Promo Performance Bar Chart
 with b1:
     with st.container(border=True):
         st.markdown(
@@ -1076,7 +1050,7 @@ with b1:
         )
         st.plotly_chart(fig_promo, use_container_width=True, config={"displayModeBar": False})
 
-# ---------- B. Leading Category Performance ----------
+# Top Selling Category Bar Chart
 with b2:
     with st.container(border=True):
         st.markdown(
@@ -1119,7 +1093,7 @@ with b2:
         )
         st.plotly_chart(fig_cat, use_container_width=True, config={"displayModeBar": False})
 
-# ---------- C. Weekday vs Weekend ----------
+# Weekday vs Weekend Comparison Chart
 with b3:
     with st.container(border=True):
         st.markdown(
@@ -1153,8 +1127,7 @@ with b3:
             ww.loc[ww["day_type"] == "Weekend", "avg_ticket"].iloc[0],
         ]
 
-        # Normalize each metric within its pair for visual comparability,
-        # while showing actual values as labels/hover.
+        # Normalize metrics for visual alignment in grouped layout
         max_pair = np.maximum(np.array(weekday_vals, dtype=float), np.array(weekend_vals, dtype=float))
         max_pair[max_pair == 0] = 1
         weekday_norm = np.array(weekday_vals) / max_pair * 100
@@ -1206,7 +1179,3 @@ with b3:
             yaxis=dict(showgrid=True, gridcolor=GRID, showticklabels=False, zeroline=False, range=[0, 122], fixedrange=True),
         )
         st.plotly_chart(fig_ww, use_container_width=True, config={"displayModeBar": False})
-
-# ============================================================
-# END
-# ============================================================

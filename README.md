@@ -30,6 +30,8 @@ Dashboard ini dirancang untuk kebutuhan **analitik pemasaran** tingkat manajeria
 ```
 DAV-UAS/
 │
+├── .github/workflows/
+│   └── ci.yml                  # Konfigurasi GitHub Actions untuk pengujian otomatis
 ├── app.py                      # Aplikasi utama Streamlit
 ├── coffe_shop_final.xlsx       # Dataset utama (28.748 baris, 24 kolom)
 ├── explore_data.py             # Script eksplorasi & validasi data
